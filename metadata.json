@@ -1,0 +1,6 @@
+{
+  "name": "Copy of TallmanDashboard",
+  "description": "A comprehensive business intelligence dashboard for a tool supply company. It provides real-time KPIs and business metrics, simulating data with AI in a demo mode and connecting to live data in production. Includes a secure login and role-based access for admins and users.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

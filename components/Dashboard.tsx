@@ -1,0 +1,97 @@
+
+import React from 'react';
+import { DashboardDataPoint, ChartGroup } from '../types';
+import { KEY_METRICS_VARS } from '../constants';
+import KpiCard from './KpiCard';
+import ChartCard from './ChartCard';
+import Header from './Header';
+import { kpiIcons, KpiIconName } from './icons';
+
+interface DashboardProps {
+    dataPoints: DashboardDataPoint[];
+}
+
+const getKpiDetails = (variableName: string): { color: string; icon: KpiIconName } => {
+    if (variableName.includes('Total Orders')) return { color: 'bg-kpi-blue', icon: 'TotalOrders' };
+    if (variableName.includes('Open Orders')) return { color: 'bg-kpi-green', icon: 'OpenOrders' };
+    if (variableName.includes('All Open Orders')) return { color: 'bg-kpi-purple', icon: 'OpenOrders2' };
+    if (variableName.includes('Daily Revenue')) return { color: 'bg-kpi-yellow', icon: 'DailyRevenue' };
+    if (variableName.includes('Open Invoices')) return { color: 'bg-kpi-pink', icon: 'OpenInvoices' };
+    if (variableName.includes('OrdersBackloged')) return { color: 'bg-kpi-red', icon: 'OrdersBacklogged' };
+    if (variableName.includes('Total Sales Monthly')) return { color: 'bg-kpi-orange', icon: 'TotalSalesMonthly' };
+    return { color: 'bg-gray-500', icon: 'TotalOrders' };
+};
+
+
+const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
+    console.log(`[Dashboard] Rendering with ${dataPoints.length} dataPoints.`);
+
+    // Add a check for dataPoints not being an array, as a final safeguard.
+    if (!Array.isArray(dataPoints)) {
+        console.error("[Dashboard] Received non-array dataPoints prop:", dataPoints);
+        return <div className="text-red-500 p-4">Error: Invalid data received for dashboard.</div>;
+    }
+    
+    const keyMetrics = dataPoints.filter(dp => KEY_METRICS_VARS.includes(dp.variableName));
+    const chartDataPoints = dataPoints.filter(dp => !KEY_METRICS_VARS.includes(dp.variableName));
+    console.log(`[Dashboard] Filtered into ${keyMetrics.length} key metrics and ${chartDataPoints.length} chart data points.`);
+
+
+    const chartOrder: ChartGroup[] = [
+        ChartGroup.ACCOUNTS, ChartGroup.CUSTOMER_METRICS, ChartGroup.HISTORICAL_DATA,
+        ChartGroup.INVENTORY, ChartGroup.POR_OVERVIEW, ChartGroup.SITE_DISTRIBUTION,
+        ChartGroup.DAILY_ORDERS, ChartGroup.WEB_ORDERS, ChartGroup.AR_AGING
+    ];
+
+    const groupedCharts = chartDataPoints.reduce((acc, dp) => {
+        if (!dp.chartGroup) {
+            console.warn('[Dashboard] Data point is missing chartGroup:', dp);
+            return acc;
+        }
+        (acc[dp.chartGroup] = acc[dp.chartGroup] || []).push(dp);
+        return acc;
+    }, {} as Record<ChartGroup, DashboardDataPoint[]>);
+    console.log('[Dashboard] Grouped chart data:', groupedCharts);
+
+    return (
+        <div className="space-y-6">
+            <Header />
+            <div className="grid grid-cols-1 lg:grid-cols-6 xl:grid-cols-5 gap-6">
+                
+                {/* Key Metrics Column */}
+                <div className="lg:col-span-1 space-y-4">
+                    {keyMetrics.map(metric => {
+                         if (!metric || !metric.variableName) {
+                            console.error('[Dashboard] Invalid key metric item:', metric);
+                            return null;
+                        }
+                        const { color, icon } = getKpiDetails(metric.variableName);
+                        const IconComponent = kpiIcons[icon];
+                        return (
+                            <KpiCard
+                                key={metric.id}
+                                metric={metric}
+                                colorClassName={color}
+                                icon={<IconComponent className="w-8 h-8 text-white opacity-90" />}
+                            />
+                        );
+                    })}
+                </div>
+
+                {/* Charts Grid */}
+                <div className="lg:col-span-5 xl:col-span-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                   {chartOrder.map(group => {
+                       console.log(`[Dashboard] Checking for chart group: ${group}`);
+                       if (groupedCharts[group]) {
+                           console.log(`[Dashboard] Rendering chart for ${group} with ${groupedCharts[group].length} data points.`);
+                           return <ChartCard key={group} title={group} data={groupedCharts[group]} />
+                       }
+                       return null;
+                   })}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Dashboard;

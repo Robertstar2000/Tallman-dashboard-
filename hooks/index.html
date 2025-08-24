@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TallmanDashboard</title>
+    <script>
+      // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+      try {
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {
+        console.warn('Could not access localStorage for theme setting.', e);
+      }
+    </script>
+    <style>
+      :root {
+        --color-background: #f0f2f5; /* Lighter gray for background */
+        --color-primary: #ffffff;
+        --color-secondary: #edf2f7;
+        --color-accent: #4c51bf;
+        --color-highlight: #667eea;
+        --color-text-primary: #1a202c;
+        --color-text-secondary: #4a5568;
+      }
+      .dark {
+        --color-background: #1a202c;
+        --color-primary: #2d3748;
+        --color-secondary: #4a5568;
+        --color-accent: #6366f1;
+        --color-highlight: #a78bfa;
+        --color-text-primary: #f9fafb;
+        --color-text-secondary: #9ca3af;
+      }
+      body {
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'background': 'var(--color-background)',
+              'primary': 'var(--color-primary)',
+              'secondary': 'var(--color-secondary)',
+              'accent': 'var(--color-accent)',
+              'highlight': 'var(--color-highlight)',
+              'text-primary': 'var(--color-text-primary)',
+              'text-secondary': 'var(--color-text-secondary)',
+              'kpi-blue': '#2E93fA',
+              'kpi-green': '#66DA26',
+              'kpi-purple': '#9575CD',
+              'kpi-yellow': '#FFC107',
+              'kpi-pink': '#E91E63',
+              'kpi-red': '#F44336',
+              'kpi-orange': '#FF9800',
+            },
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "recharts": "https://esm.sh/recharts@^3.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^6.25.1",
+    "@google/genai": "https://esm.sh/@google/genai"
+  }
+}
+</script>
+</head>
+  <body class="bg-background text-text-primary">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
