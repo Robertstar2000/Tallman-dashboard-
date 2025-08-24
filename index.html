@@ -40,6 +40,75 @@
         transition: background-color 0.3s ease, color 0.3s ease;
       }
     </style>
+    <style>
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        body {
+          background-color: #ffffff !important;
+          color: #000000 !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        main {
+          padding: 1rem !important;
+          margin: 0 !important;
+        }
+        .bg-primary, .bg-secondary, .shadow-lg, .rounded-lg {
+          background-color: #ffffff !important;
+          box-shadow: none !important;
+          border: 1px solid #ddd !important;
+          color: #000 !important;
+        }
+        .text-text-primary {
+           color: #000 !important;
+        }
+        .text-text-secondary {
+            color: #444 !important;
+        }
+        h1, h2, h3 {
+            color: #000 !important;
+        }
+        .grid, .lg\:grid-cols-6, .xl\:grid-cols-5, .lg\:col-span-1, .lg\:col-span-5, .xl\:col-span-4, .grid-cols-1, .md\:grid-cols-2, .xl\:grid-cols-3 {
+            display: block !important;
+            width: 100% !important;
+        }
+        .p-4, .sm\:p-6, .lg\:p-8 {
+            padding: 0 !important;
+        }
+        .space-y-6 > *, .space-y-4 > * {
+            page-break-inside: avoid;
+            margin-top: 1.5rem;
+        }
+        .h-80 {
+            height: auto !important;
+            min-height: 250px;
+        }
+        .recharts-responsive-container, .recharts-wrapper {
+            width: 100% !important;
+            height: 250px !important;
+        }
+        .recharts-surface, svg {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .recharts-tooltip-wrapper {
+            display: none !important;
+        }
+        .text-red-600 {
+            color: #000 !important;
+        }
+        .bg-kpi-blue, .bg-kpi-green, .bg-kpi-purple, .bg-kpi-yellow, .bg-kpi-pink, .bg-kpi-red, .bg-kpi-orange {
+            background-color: #eee !important;
+            color: #000 !important;
+            border: 1px solid #ccc !important;
+        }
+        .text-white {
+            color: #000 !important;
+        }
+      }
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {

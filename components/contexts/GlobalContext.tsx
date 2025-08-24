@@ -15,7 +15,7 @@ const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const [theme, setTheme] = useState<Theme>(() => (safeLocalStorage.getItem('theme') as Theme) || 'dark');
-    const [mode, setMode] = useState<Mode>('demo');
+    const [mode, setMode] = useState<Mode>('production');
 
     useEffect(() => {
         const root = window.document.documentElement;

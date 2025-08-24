@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { DashboardDataPoint, ChartGroup, ServerName, ConnectionDetails } from '../types';
 import { useGlobal } from './contexts/GlobalContext';
 import ConnectionStatusModal from './ConnectionStatusModal';
+import HelpModal from './HelpModal';
 
 interface AdminProps {
     dataPoints: DashboardDataPoint[];
@@ -27,6 +28,7 @@ const Admin: React.FC<AdminProps> = ({
 }) => {
     const { mode, setMode } = useGlobal();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const [connectionDetails, setConnectionDetails] = useState<ConnectionDetails[]>([]);
 
     const handleTestConnections = async () => {
@@ -61,6 +63,9 @@ const Admin: React.FC<AdminProps> = ({
                      <Link to="/sql-query-tool" className="px-3 py-2 text-sm font-medium text-white bg-highlight rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent focus:ring-offset-background">
                         SQL Tool
                     </Link>
+                    <button onClick={() => setIsHelpModalOpen(true)} className="px-3 py-2 text-sm font-medium text-white bg-gray-600 rounded-md hover:bg-gray-700">
+                        Help
+                    </button>
                 </div>
             </div>
 
@@ -92,9 +97,9 @@ const Admin: React.FC<AdminProps> = ({
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[70vh]">
                 <table className="min-w-full divide-y divide-secondary">
-                    <thead className="bg-secondary">
+                    <thead className="bg-secondary sticky top-0">
                         <tr>
                             {headers.map(header => (
                                 <th key={header} scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
@@ -145,17 +150,17 @@ const Admin: React.FC<AdminProps> = ({
                                     <textarea
                                         value={row.productionSqlExpression}
                                         onChange={(e) => handleInputChange(row.id, 'productionSqlExpression', e.target.value)}
-                                        className="w-full bg-secondary p-1 rounded border border-transparent focus:border-accent focus:ring-0 text-sm font-mono min-h-[40px] resize-y"
-                                        rows={3}
+                                        className="w-full bg-secondary p-1 rounded border border-transparent focus:border-accent focus:ring-0 text-sm font-mono"
+                                        rows={5}
                                     />
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">{typeof row.value === 'number' ? row.value.toLocaleString() : row.value}</td>
                                 <td className="px-6 py-4 text-sm">
-                                     <input
-                                        type="text"
+                                     <textarea
                                         value={row.calculationType}
                                         onChange={(e) => handleInputChange(row.id, 'calculationType', e.target.value)}
                                         className="w-full bg-secondary p-1 rounded border border-transparent focus:border-accent focus:ring-0 text-sm"
+                                        rows={5}
                                     />
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(row.lastUpdated).toLocaleString()}</td>
@@ -166,6 +171,7 @@ const Admin: React.FC<AdminProps> = ({
             </div>
 
             {isModalOpen && <ConnectionStatusModal details={connectionDetails} onClose={() => setIsModalOpen(false)} />}
+            {isHelpModalOpen && <HelpModal title="Developer README" filePath="/README.md" onClose={() => setIsHelpModalOpen(false)} />}
 
         </div>
     );

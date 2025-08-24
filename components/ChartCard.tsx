@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -61,9 +62,18 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                     console.warn(`[ChartCard - transformData] Invalid data point found for chart "${title}":`, dp);
                     return acc;
                 }
-                const parts = dp.dataPoint.split(', ');
-                const category = parts[0];
-                const groupName = parts.length > 1 ? parts[1].trim() : category;
+                
+                let category: string;
+                let groupName: string;
+
+                if (xAxis === 'month' && typeof dp.filterValue === 'string' && dp.filterValue.startsWith('current_month-')) {
+                    category = dp.dataPoint;
+                    groupName = dp.filterValue as string;
+                } else {
+                    const parts = dp.dataPoint.split(', ');
+                    category = parts[0];
+                    groupName = parts.length > 1 ? parts[1].trim() : dp.dataPoint;
+                }
 
                 if (!acc[groupName]) {
                     acc[groupName] = { name: groupName };
@@ -74,32 +84,34 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
             
             let result = Object.values(groupedData);
 
-            const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-            // Sort and format if x-axis is month
-            if (result.length > 0 && monthOrder.includes(result[0]?.name)) {
+            if (xAxis === 'month' && result.length > 0 && result.some(r => r.name.startsWith('current_month-'))) {
+                const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                 const today = new Date();
-                const currentMonthIndex = today.getMonth();
-                const currentYear = today.getFullYear();
                 
-                const dynamicMonthOrder = [
-                    ...monthOrder.slice(currentMonthIndex + 1), // Months from last year
-                    ...monthOrder.slice(0, currentMonthIndex + 1)  // Months from this year
-                ];
+                const getSortKey = (name: string): number => {
+                    const match = name.match(/current_month-(\d+)/);
+                    if (!match) return -1;
+                    return parseInt(match[1], 10);
+                };
                 
                 result.forEach(item => {
-                    const monthIndex = monthOrder.indexOf(item.name);
-                    const year = monthIndex > currentMonthIndex ? currentYear - 1 : currentYear;
-                    const shortYear = new Date(year, 0, 1).toLocaleDateString('en-US', { year: '2-digit' });
-                    item.displayName = `${item.name} '${shortYear}`;
+                    const offset = getSortKey(item.name);
+                    if (offset !== -1) {
+                        const date = new Date(today);
+                        date.setMonth(today.getMonth() - offset);
+                        const monthName = monthOrder[date.getMonth()];
+                        const shortYear = date.toLocaleDateString('en-US', { year: '2-digit' });
+                        item.displayName = `${monthName} '${shortYear}`;
+                    } else {
+                        item.displayName = item.name;
+                    }
                 });
 
-                result.sort((a, b) => dynamicMonthOrder.indexOf(a.name) - dynamicMonthOrder.indexOf(b.name));
+                // Sort chronologically (oldest first, i.e., largest offset first)
+                result.sort((a, b) => getSortKey(b.name) - getSortKey(a.name));
                 
-                // Use the new displayName for the chart's x-axis
                 result = result.map(item => ({ ...item, name: item.displayName }));
             }
-
 
             return result;
         }
