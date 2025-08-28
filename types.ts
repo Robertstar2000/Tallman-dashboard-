@@ -26,7 +26,8 @@ export interface DashboardDataPoint {
     serverName: ServerName;
     tableName: string;
     productionSqlExpression: string;
-    value: string | number;
+    value: string | number; // Static demo values
+    prodValue: number | null; // Production MCP SQL execution results
     calculationType: string;
     lastUpdated: string;
     valueColumn: string;

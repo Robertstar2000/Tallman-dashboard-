@@ -1,0 +1,1912 @@
+{ 
+  "result": { 
+    "success": true, 
+    "row_count": 8, 
+    "columns": [ 
+      "table_name", 
+      "column_name" 
+    ], 
+    "data": [ 
+      { "table_name": "balances", "column_name": "account_no" }, 
+      { "table_name": "chart_of_accts", "column_name": "account_access_type_cd" }, 
+      { "table_name": "chart_of_accts", "column_name": "account_definition_cd" }, 
+      { "table_name": "chart_of_accts", "column_name": "account_desc" }, 
+      { "table_name": "chart_of_accts", "column_name": "account_information" }, 
+      { "table_name": "chart_of_accts", "column_name": "account_no" }, 
+      { "table_name": "chart_of_accts", "column_name": "account_type" }, 
+      { "table_name": "chart_of_accts", "column_name": "chart_of_accts_uid" } 
+    ]
+  }
+    {
+        "table_name": "aiag_label",
+        "column_name": "department_section_acct"
+      },
+      {
+        "table_name": "departments",
+        "column_name": "dept_desc"
+      },
+      {
+        "table_name": "departments",
+        "column_name": "dept_id"
+      },
+      {
+        "table_name": "document_line_inv_xref_dtl",
+        "column_name": "department"
+      },
+      {
+        "table_name": "icm_customer_item_info",
+        "column_name": "dept"
+      },
+      {
+        "table_name": "icm_customer_item_info",
+        "column_name": "sub_dept"
+      },
+      {
+        "table_name": "inv_mast_msds",
+        "column_name": "dept_of_transportaion_message"
+      },
+      {
+        "table_name": "inv_xref",
+        "column_name": "department"
+      },
+      {
+        "table_name": "inv_xref_741",
+        "column_name": "department"
+      },
+      {
+        "table_name": "job_based_commission",
+        "column_name": "dept_commission_amount"
+      },
+      {
+        "table_name": "job_based_commission",
+        "column_name": "dept_head_commission_amount"
+      },
+      {
+        "table_name": "oe_hdr_u_of_michigan",
+        "column_name": "department_ref_no"
+      },
+      {
+        "table_name": "oe_line_service_ud",
+        "column_name": "department"
+      },
+      {
+        "table_name": "order_based_commission",
+        "column_name": "dept_commission_amount"
+      },
+      {
+        "table_name": "prodorder_department",
+        "column_name": "department_description"
+      },
+      {
+        "table_name": "prodorder_department",
+        "column_name": "department_id"
+      },
+      {
+        "table_name": "prodorder_department",
+        "column_name": "prodorder_department_uid"
+      },
+      {
+        "table_name": "Temp_WEBPROD",
+        "column_name": "DepartmentID"
+      },
+      {
+        "table_name": "users",
+        "column_name": "prodorder_department_uid"
+      },
+      {
+        "table_name": "work_center",
+        "column_name": "prodorder_department_uid"
+      }
+      {
+  "result": {
+    "success": true,
+    "row_count": 6,
+    "columns": [
+      "source_table",
+      "dept_code"
+    ],
+    "data": [
+      {
+        "source_table": "oe_line_service_ud",
+        "dept_code": "Assembly"
+      },
+      {
+        "source_table": "oe_line_service_ud",
+        "dept_code": "Blocks"
+      },
+      {
+        "source_table": "oe_line_service_ud",
+        "dept_code": "Fiberglass"
+      },
+      {
+        "source_table": "oe_line_service_ud",
+        "dept_code": "Repair"
+      },
+      {
+        "source_table": "oe_line_service_ud",
+        "dept_code": "Rope"
+      },
+      {
+        "source_table": "oe_line_service_ud",
+        "dept_code": "Rubber"
+      }
+{
+  "result": {
+    "success": true,
+    "row_count": 16,
+    "columns": [
+      "COLUMN_NAME",
+      "DATA_TYPE"
+    ],
+    "data": [
+      {
+        "COLUMN_NAME": "acct_no",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "bin_location",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "category",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "change",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "created_by",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "date_created",
+        "DATA_TYPE": "datetime"
+      },
+      {
+        "COLUMN_NAME": "date_last_modified",
+        "DATA_TYPE": "datetime"
+      },
+      {
+        "COLUMN_NAME": "department",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "inv_xref_741_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "inv_xref_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "last_maintained_by",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "max_qty",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "order_point",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "order_qty",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "special_status",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "tax_cd",
+        "DATA_TYPE": "varchar"
+      }
+      {
+  "result": {
+    "success": true,
+    "row_count": 191,
+    "columns": [
+      "COLUMN_NAME",
+      "DATA_TYPE"
+    ],
+    "data": [
+      {
+        "COLUMN_NAME": "aia_enabled_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "aia_remnant_qty",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "allow_custom_desc_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "apply_state_fuel_surcharge_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "attribute_group_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "auto_allocation_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "avail_for_sch_delivery_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "base_unit",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "bo_fill_canadian_purchase_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "bol_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "brand_name",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "brand_type",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "buy_get_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "buyer_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "catalog_item",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "catch_lot_weight_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "catch_weight_indicator",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "cfc_license_req_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "class_code",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "class_id1",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "class_id2",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "class_id3",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "class_id4",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "class_id5",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "commission_class_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "commission_cost_multiplier",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "commodity_code",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "configurable_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "conoco_division_class_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "convert_quantities",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "core_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "core_parent_item_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "country_of_origin_code",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "country_of_origin_req_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "cpq_configurator_id",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "cpq_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "created_by",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "cube",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "currency_id",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "cust_parent_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "cylinder_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "d_length",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "date_created",
+        "DATA_TYPE": "datetime"
+      },
+      {
+        "COLUMN_NAME": "date_inactive",
+        "DATA_TYPE": "datetime"
+      },
+      {
+        "COLUMN_NAME": "date_last_modified",
+        "DATA_TYPE": "datetime"
+      },
+      {
+        "COLUMN_NAME": "date_reactive",
+        "DATA_TYPE": "datetime"
+      },
+      {
+        "COLUMN_NAME": "dci_code",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "default_direct_ship_disp_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "default_price_family_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "default_product_group",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "default_purchase_disc_group",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "default_purchasing_unit",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "default_sales_discount_group",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "default_selling_unit",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "default_transfer_increment_qty",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "default_transfer_unit",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "defective_recall_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "delete_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "dflt_dimension_scale",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "discontinued_date",
+        "DATA_TYPE": "datetime"
+      },
+      {
+        "COLUMN_NAME": "disposition",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "do_not_auto_allocate_desc",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "do_not_field_destroy_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "drum_pickup_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "ecc_enabled_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "epa_cert_req_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "equipment_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "exclude_from_auto_short_buy_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "exclude_from_edi832_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "exclude_order_level_discount_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "extended_desc",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "fitting",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "fulltext_timestamp",
+        "DATA_TYPE": "timestamp"
+      },
+      {
+        "COLUMN_NAME": "functional_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "generic_item_desc",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "haz_mat_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "hazmat_fee_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "hazmat_ormd_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "hazmat_ormd_qty",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "height",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "hi",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "hose",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "import_as_direct_ship_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "inactive",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "inv_mast_uid_dup_usage",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "invoice_type",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "iqs_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "item_classification_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "item_desc",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "item_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "item_label_type_cd",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "item_notes",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "item_sales_tax_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "item_terms_discount_pct",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "item_type_cd",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "iva_taxable_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "jm_dts_fulfillment_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "keywords",
+        "DATA_TYPE": "text"
+      },
+      {
+        "COLUMN_NAME": "label_group_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "landed_cost_driver_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "last_maintained_by",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "last_pricing_service_date",
+        "DATA_TYPE": "datetime"
+      },
+      {
+        "COLUMN_NAME": "length",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "lifo_pool_item_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "local_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "manufacturer_name",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "manufacturer_program_type_pct",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "manufacturer_program_type_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "net_weight",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "nmfc_hdr_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "oc_print_on_invoice_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "oc_print_on_pick_ticket_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "order_hold_class_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "other_charge_item",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "override_specific_costing",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "packing_weight_tracking_option",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "parker_division_cd",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "parker_product_cd",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "part_number",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "partner_program_labor_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "pf_stock",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "pick_ticket_type",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "price1",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price10",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price2",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price3",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price4",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price5",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price6",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price7",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price8",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "price9",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "print_label",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "product_tier",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "product_type",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "ptlx_stock",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "pumpoff_item",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "pumpoff_uom",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "purchase_pricing_unit",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "purchase_pricing_unit_size",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "purchasing_weight",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "redemption_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "redemption_value",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "rental_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "rental_item_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "requisition",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "restricted_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "retail_accessories",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "rolled_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "round_prices",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "sales_pricing_unit",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "sales_pricing_unit_size",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "sales_set_quantity",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "sample_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "sample_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "serial_tracking_option_cd",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "serialization_required_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "serialized",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "service_commission_class_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "service_terms_discount_pct",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "shippable_unit_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "short_code",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "single_use_or_reusable",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "sold_outside_us_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "source_type_cd",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "spa_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "suppress_from_web_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "tag_hold_class_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "tally_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "tariff_surcharge_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "tariff_surcharge_pct",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "ti",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "tpcx_status",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "track_lots",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "type_of_sale",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "ucc128_pack_type_cd",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "ucc128_standard_pack_size",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "unitconv_override_oe_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "unitconv_override_purc_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "unspsc_code",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "upc_or_ean",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "upc_or_ean_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "COLUMN_NAME": "update_via_pricing_service",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "use_oc_tax_rules_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "use_revisions_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "use_tags_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "vendor_consigned",
+        "DATA_TYPE": "char"
+      },
+      {
+        "COLUMN_NAME": "vndr_stock",
+        "DATA_TYPE": "int"
+      },
+      {
+        "COLUMN_NAME": "weight",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "COLUMN_NAME": "width",
+        "DATA_TYPE": "decimal"
+      }
+      {
+  "result": {
+    "success": true,
+    "row_count": 69,
+    "columns": [
+      "TABLE_NAME",
+      "COLUMN_NAME",
+      "DATA_TYPE"
+    ],
+    "data": [
+      {
+        "TABLE_NAME": "document_line_inv_xref_dtl",
+        "COLUMN_NAME": "document_line_inv_xref_dtl_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "allow_ds_discontinued_items",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "allow_sp_discontinued_items",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "crit_item_deviation_mult",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "critical_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "demand_forecast_formula_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "drp_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "inv_mast_uid_dup_usage",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "iqs_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "item_putaway_attribute_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "loc_cust_parent_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "loc_item_type_cd",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "local_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "osmi_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "pattern_like_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "price_family_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "pumpoff_item",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_loc",
+        "COLUMN_NAME": "saved_demand_forecast_formula_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "attribute_group_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "catalog_item",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "core_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "core_parent_item_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "cpq_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "cust_parent_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "cylinder_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "default_price_family_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "generic_item_desc",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "hazmat_fee_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "inv_mast_uid_dup_usage",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "iqs_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "item_classification_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "item_desc",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "item_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "item_label_type_cd",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "item_notes",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "item_sales_tax_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "item_terms_discount_pct",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "item_type_cd",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "label_group_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "lifo_pool_item_class",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "local_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "manufacturer_program_type_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "nmfc_hdr_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "other_charge_item",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "partner_program_labor_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "pumpoff_item",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "redemption_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "rental_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "rental_item_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "rolled_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "sample_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "sample_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "spa_item_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "tag_hold_class_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_mast",
+        "COLUMN_NAME": "tariff_surcharge_inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "inv_mast_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "inv_xref_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "item_label_action_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "item_label_calc_type_flag",
+        "DATA_TYPE": "char"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "item_label_multiplier",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "item_label_text",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "item_label_unit_size",
+        "DATA_TYPE": "decimal"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "item_label_uom",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "item_revision_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_xref",
+        "COLUMN_NAME": "their_item_id",
+        "DATA_TYPE": "varchar"
+      },
+      {
+        "TABLE_NAME": "inv_xref_741",
+        "COLUMN_NAME": "inv_xref_741_uid",
+        "DATA_TYPE": "int"
+      },
+      {
+        "TABLE_NAME": "inv_xref_741",
+        "COLUMN_NAME": "inv_xref_uid",
+        "DATA_TYPE": "int"
+      }
+    ],
+    {
+  "result": {
+    "success": true,
+    "row_count": 100,
+    "columns": [
+      "account_no",
+      "account_desc",
+      "bal"
+    ],
+    "data": [
+      {
+        "account_no": "11000002",
+        "account_desc": "Inventory - Assy",
+        "bal": 23586895.86
+      },
+      {
+        "account_no": "40200002",
+        "account_desc": "COGS - Customer Sales Assy",
+        "bal": 22559688.14
+      },
+      {
+        "account_no": "14620002",
+        "account_desc": "Fixtures & Equipment - Rental Assets",
+        "bal": 13402627.6
+      },
+      {
+        "account_no": "40200001",
+        "account_desc": "COGS - Customer Sales HQ",
+        "bal": 10018715
+      },
+      {
+        "account_no": "10600001",
+        "account_desc": "Accounts Receivable",
+        "bal": 9265688.42
+      },
+      {
+        "account_no": "30600002",
+        "account_desc": "Rental Transfer",
+        "bal": 5215656.72
+      },
+      {
+        "account_no": "51500002",
+        "account_desc": "Gross Wages",
+        "bal": 3763015.09
+      },
+      {
+        "account_no": "11000001",
+        "account_desc": "Inventory - HQ",
+        "bal": 2102233.66
+      },
+      {
+        "account_no": "30100003",
+        "account_desc": "Sales - Customer Sales",
+        "bal": 1495048.77
+      },
+      {
+        "account_no": "10650002",
+        "account_desc": "Accounts Receivable - Rental",
+        "bal": 1307144.9
+      },
+      {
+        "account_no": "65400002",
+        "account_desc": "Freight-Out",
+        "bal": 1172253.81
+      },
+      {
+        "account_no": "57550002",
+        "account_desc": "Depreciation Expense - Rental Equipment",
+        "bal": 1149169.81
+      },
+      {
+        "account_no": "40250002",
+        "account_desc": "COGS - Customer Repairs Assembly",
+        "bal": 944409.38
+      },
+      {
+        "account_no": "40280002",
+        "account_desc": "COGS - Customer Sales DDIN",
+        "bal": 819467.98
+      },
+      {
+        "account_no": "51500001",
+        "account_desc": "Gross Wages",
+        "bal": 814064.84
+      },
+      {
+        "account_no": "14800002",
+        "account_desc": "Trucks & Cars",
+        "bal": 694283.16
+      },
+      {
+        "account_no": "95500001",
+        "account_desc": "ESOP Compensation Expense",
+        "bal": 690717
+      },
+      {
+        "account_no": "40260002",
+        "account_desc": "COGS - Customer Sales Assembly",
+        "bal": 634645.21
+      },
+      {
+        "account_no": "57500002",
+        "account_desc": "Depreciation Expense",
+        "bal": 616451.66
+      },
+      {
+        "account_no": "20100002",
+        "account_desc": "Inventory Receipts Clearing",
+        "bal": 598066.77
+      },
+      {
+        "account_no": "40255002",
+        "account_desc": "COGS - Rental Asset Sales",
+        "bal": 517732.52
+      },
+      {
+        "account_no": "53510002",
+        "account_desc": "Health Insurance",
+        "bal": 507275
+      },
+      {
+        "account_no": "40280001",
+        "account_desc": "COGS - Customer Sales DDIN",
+        "bal": 469129.5
+      },
+      {
+        "account_no": "20650001",
+        "account_desc": "ESOP Compensation Payable",
+        "bal": 459258.93
+      },
+      {
+        "account_no": "40300002",
+        "account_desc": "Freight In",
+        "bal": 456344.41
+      },
+      {
+        "account_no": "56800001",
+        "account_desc": "Bank Service Charges",
+        "bal": 434188.52
+      },
+      {
+        "account_no": "51900002",
+        "account_desc": "Rent Expense",
+        "bal": 429000.03
+      },
+      {
+        "account_no": "58100002",
+        "account_desc": "Research & Development",
+        "bal": 404525.04
+      },
+      {
+        "account_no": "53500002",
+        "account_desc": "Insurance - Property / Workers Comp +",
+        "bal": 393750
+      },
+      {
+        "account_no": "10160001",
+        "account_desc": "Cash - Barrington #6118",
+        "bal": 313343.77
+      },
+      {
+        "account_no": "62000002",
+        "account_desc": "Interest Expense",
+        "bal": 287742.42
+      },
+      {
+        "account_no": "56470004",
+        "account_desc": "Outside Consulting - MCR",
+        "bal": 280594.34
+      },
+      {
+        "account_no": "54200002",
+        "account_desc": "FICA Tax",
+        "bal": 277278.45
+      },
+      {
+        "account_no": "51650002",
+        "account_desc": "Bonus",
+        "bal": 270000
+      },
+      {
+        "account_no": "53400002",
+        "account_desc": "Advertising",
+        "bal": 259337.48
+      },
+      {
+        "account_no": "40260001",
+        "account_desc": "COGS - Customer Sales Assembly",
+        "bal": 250129.34
+      },
+      {
+        "account_no": "10170001",
+        "account_desc": "Cash - Barrington #8456",
+        "bal": 228128.26
+      },
+      {
+        "account_no": "57700002",
+        "account_desc": "Amortization Expense",
+        "bal": 221249.52
+      },
+      {
+        "account_no": "62200002",
+        "account_desc": "Interest Expense: Tony Bozell Interest",
+        "bal": 217604.2
+      },
+      {
+        "account_no": "59700002",
+        "account_desc": "Safe Harbor - 401k Contribution",
+        "bal": 213984.07
+      },
+      {
+        "account_no": "50400002",
+        "account_desc": "Bad Debt Expense",
+        "bal": 200000
+      },
+      {
+        "account_no": "50330002",
+        "account_desc": "Shop Supplies",
+        "bal": 190404.68
+      },
+      {
+        "account_no": "53400001",
+        "account_desc": "Advertising",
+        "bal": 181269.2
+      },
+      {
+        "account_no": "53900001",
+        "account_desc": "HSA - Health Savings Account",
+        "bal": 158400
+      },
+      {
+        "account_no": "13810002",
+        "account_desc": "Prepaid Insurance",
+        "bal": 155271.4
+      },
+      {
+        "account_no": "10140001",
+        "account_desc": "Cash - Barrington #9724 - Credit Card",
+        "bal": 146713.3
+      },
+      {
+        "account_no": "10750002",
+        "account_desc": "Allowance for Doubtful Accounts",
+        "bal": 137104.14
+      },
+      {
+        "account_no": "62000003",
+        "account_desc": "Interest Expense",
+        "bal": 128451.62
+      },
+      {
+        "account_no": "65400001",
+        "account_desc": "Freight-Out",
+        "bal": 121777.27
+      },
+      {
+        "account_no": "40270002",
+        "account_desc": "COGS - Rental Repair Blocks",
+        "bal": 120269.06
+      },
+      {
+        "account_no": "20100001",
+        "account_desc": "Inventory Receipts Clearing",
+        "bal": 117078.96
+      },
+      {
+        "account_no": "40350002",
+        "account_desc": "Inventory Freight Variance",
+        "bal": 82725.71
+      },
+      {
+        "account_no": "63560001",
+        "account_desc": "T & E - Lodging",
+        "bal": 79861.22
+      },
+      {
+        "account_no": "15500002",
+        "account_desc": "Repair - Work in Process Inventory",
+        "bal": 77827.7
+      },
+      {
+        "account_no": "51900007",
+        "account_desc": "Rent Expense",
+        "bal": 72225
+      },
+      {
+        "account_no": "65100002",
+        "account_desc": "Auto Repair",
+        "bal": 70076.66
+      },
+      {
+        "account_no": "52220102",
+        "account_desc": "Computer Hardware Purchases-IN",
+        "bal": 69072.29
+      },
+      {
+        "account_no": "52240001",
+        "account_desc": "Ongoing Website Development",
+        "bal": 64963.31
+      },
+      {
+        "account_no": "59350002",
+        "account_desc": "Taxes: Property",
+        "bal": 63900
+      },
+      {
+        "account_no": "54200001",
+        "account_desc": "FICA Tax",
+        "bal": 63533.01
+      },
+      {
+        "account_no": "13800002",
+        "account_desc": "Prepaid Expense - Health Insurance",
+        "bal": 61636.64
+      },
+      {
+        "account_no": "63520001",
+        "account_desc": "T & E - Meals",
+        "bal": 60602.13
+      },
+      {
+        "account_no": "63650001",
+        "account_desc": "Trade Show Expense",
+        "bal": 60081.01
+      },
+      {
+        "account_no": "52620001",
+        "account_desc": "Gasoline",
+        "bal": 58893.1
+      },
+      {
+        "account_no": "52200101",
+        "account_desc": "Computer - Software Support",
+        "bal": 57361.69
+      },
+      {
+        "account_no": "59350003",
+        "account_desc": "Taxes: Property",
+        "bal": 56250
+      },
+      {
+        "account_no": "56400002",
+        "account_desc": "Professional Fees",
+        "bal": 56250
+      },
+      {
+        "account_no": "56470002",
+        "account_desc": "Outside Consulting - MIFECO, Beltec, Atl",
+        "bal": 55584.25
+      },
+      {
+        "account_no": "50350002",
+        "account_desc": "Shipping Supplies",
+        "bal": 53845.2
+      },
+      {
+        "account_no": "41090002",
+        "account_desc": "Inventory Quantity Variance",
+        "bal": 50387.71
+      },
+      {
+        "account_no": "40300001",
+        "account_desc": "Freight In",
+        "bal": 50378.03
+      },
+      {
+        "account_no": "52640003",
+        "account_desc": "Electric",
+        "bal": 47850.53
+      },
+      {
+        "account_no": "40150001",
+        "account_desc": "Cost of Goods Sold - Labor (Assembly)",
+        "bal": 47306.12
+      },
+      {
+        "account_no": "52900003",
+        "account_desc": "Telephone",
+        "bal": 45579.7
+      },
+      {
+        "account_no": "52100002",
+        "account_desc": "Equipment Rental",
+        "bal": 45120.52
+      },
+      {
+        "account_no": "31000001",
+        "account_desc": "Uncollectible Accounts",
+        "bal": 44459.97
+      },
+      {
+        "account_no": "51900004",
+        "account_desc": "Rent Expense",
+        "bal": 42300
+      },
+      {
+        "account_no": "51210002",
+        "account_desc": "Consulting - ESOP",
+        "bal": 41808.28
+      },
+      {
+        "account_no": "62250002",
+        "account_desc": "Interest Expense - Youngerman",
+        "bal": 40247.86
+      },
+      {
+        "account_no": "52640002",
+        "account_desc": "Electric",
+        "bal": 39772.67
+      },
+      {
+        "account_no": "50900002",
+        "account_desc": "Building Maintenance",
+        "bal": 39404.59
+      },
+      {
+        "account_no": "51250001",
+        "account_desc": "Board Meeting Expense",
+        "bal": 38250
+      },
+      {
+        "account_no": "56420002",
+        "account_desc": "Accounting Fees",
+        "bal": 34735
+      },
+      {
+        "account_no": "53520002",
+        "account_desc": "Dental Insurance",
+        "bal": 33750
+      },
+      {
+        "account_no": "61400001",
+        "account_desc": "Contributions",
+        "bal": 32631.38
+      },
+      {
+        "account_no": "41050002",
+        "account_desc": "Inventory Cost Variance",
+        "bal": 32018.9
+      },
+      {
+        "account_no": "56600002",
+        "account_desc": "Office Expense",
+        "bal": 31025.98
+      },
+      {
+        "account_no": "65400007",
+        "account_desc": "Freight-Out",
+        "bal": 30058.07
+      },
+      {
+        "account_no": "52200001",
+        "account_desc": "Computer - Support",
+        "bal": 29037.15
+      },
+      {
+        "account_no": "52620002",
+        "account_desc": "Gasoline",
+        "bal": 27548.21
+      },
+      {
+        "account_no": "39400002",
+        "account_desc": "Trade in Allowance",
+        "bal": 24780.18
+      },
+      {
+        "account_no": "53610001",
+        "account_desc": "Life and Disability Insurance",
+        "bal": 23827.14
+      },
+      {
+        "account_no": "30180002",
+        "account_desc": "Freight - Allowed",
+        "bal": 22789.9
+      },
+      {
+        "account_no": "63060002",
+        "account_desc": "Equipment Repairs",
+        "bal": 22378.99
+      },
+      {
+        "account_no": "39600001",
+        "account_desc": "Sales Discounts",
+        "bal": 21533.82
+      },
+      {
+        "account_no": "65100001",
+        "account_desc": "Auto Repair",
+        "bal": 20765.52
+      },
+      {
+        "account_no": "39600002",
+        "account_desc": "Sales Discounts",
+        "bal": 19916.38
+      },
+      {
+        "account_no": "59150002",
+        "account_desc": "Taxes: State",
+        "bal": 19575
+      },
+      {
+        "account_no": "52900001",
+        "account_desc": "Telephone",
+        "bal": 18426.5
+      },
+      {
+        "account_no": "56600001",
+        "account_desc": "Office Expense",
+        "bal": 17961.64
+      }
+    ],
+    "query": "SELECT TOP (100)\n  a.account_no,\n  a.account_desc,\n  SUM(b.cumulative_balance) AS bal\nFROM chart_of_accts a\nJOIN balances b ON b.account_no = a.account_no\nWHERE b.year_for_period = YEAR(DATEADD(month,-11,GETDATE()))\n  AND b.period          = MONTH(DATEADD(month,-11,GETDATE()))\nGROUP BY a.account_no, a.account_desc\nHAVING SUM(b.cumulative_balance) <> 0\nORDER BY bal DESC;\n",
+    "limited": false
+  }
+}
+{
+  "result": {
+    "success": true,
+    "row_count": 15,
+    "columns": [
+      "column_name"
+    ],
+    "data": [
+      {
+        "column_name": "acct_no"
+      },
+      {
+        "column_name": "bin_location"
+      },
+      {
+        "column_name": "category"
+      },
+      {
+        "column_name": "change"
+      },
+      {
+        "column_name": "created_by"
+      },
+      {
+        "column_name": "date_created"
+      },
+      {
+        "column_name": "date_last_modified"
+      },
+      {
+        "column_name": "department"
+      },
+      {
+        "column_name": "document_line_inv_xref_dtl_uid"
+      },
+      {
+        "column_name": "last_maintained_by"
+      },
+      {
+        "column_name": "max_qty"
+      },
+      {
+        "column_name": "order_point"
+      },
+      {
+        "column_name": "order_qty"
+      },
+      {
+        "column_name": "special_status"
+      },
+      {
+        "column_name": "tax_cd"
+      }
+    ],
+    "query": "SELECT c.name AS column_name\nFROM sys.columns c\nJOIN sys.tables  t ON t.object_id = c.object_id\nWHERE t.name = 'document_line_inv_xref_dtl'\nORDER BY c.name;\n",
+    "limited": false
+  }
+}
+    ],
+    ],
+    ],
+    ], 
+}

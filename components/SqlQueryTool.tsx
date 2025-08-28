@@ -12,7 +12,7 @@ interface SqlQueryToolProps {
 
 const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint }) => {
     const { mode } = useGlobal();
-    const [query, setQuery] = useState('SELECT COUNT(order_no) AS result FROM oe_hdr WHERE status = \'open\';');
+    const [query, setQuery] = useState('SELECT COUNT(order_no) AS result FROM oe_hdr;');
     const [server, setServer] = useState<ServerName>(ServerName.P21);
     const [result, setResult] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);

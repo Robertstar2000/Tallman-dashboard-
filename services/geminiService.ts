@@ -102,7 +102,7 @@ const callOllama = async (prompt: string): Promise<any> => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'llama3', // As specified in README
+                model: 'phi:latest', // Using available model
                 prompt: prompt,
                 stream: false,
                 format: 'json'

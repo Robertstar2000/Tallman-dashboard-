@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DashboardDataPoint, ChartGroup } from '../types';
 import { KEY_METRICS_VARS } from '../constants';
@@ -6,6 +5,7 @@ import KpiCard from './KpiCard';
 import ChartCard from './ChartCard';
 import Header from './Header';
 import { kpiIcons, KpiIconName } from './icons';
+import { useGlobal } from './contexts/GlobalContext';
 
 interface DashboardProps {
     dataPoints: DashboardDataPoint[];
@@ -24,7 +24,8 @@ const getKpiDetails = (variableName: string): { color: string; icon: KpiIconName
 
 
 const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
-    console.log(`[Dashboard] Rendering with ${dataPoints.length} dataPoints.`);
+    const { mode } = useGlobal();
+    console.log(`[Dashboard] Rendering with ${dataPoints.length} dataPoints in ${mode} mode.`);
 
     // Add a check for dataPoints not being an array, as a final safeguard.
     if (!Array.isArray(dataPoints)) {
@@ -32,8 +33,25 @@ const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
         return <div className="text-red-500 p-4">Error: Invalid data received for dashboard.</div>;
     }
     
-    const keyMetrics = dataPoints.filter(dp => KEY_METRICS_VARS.includes(dp.variableName));
-    const chartDataPoints = dataPoints.filter(dp => !KEY_METRICS_VARS.includes(dp.variableName));
+    // Helper function to get the appropriate value based on current mode
+    const getDisplayValue = (dp: DashboardDataPoint): number => {
+        if (mode === 'production') {
+            // In production mode, use prodValue if available, otherwise fall back to value
+            return typeof dp.prodValue === 'number' ? dp.prodValue : (typeof dp.value === 'number' ? dp.value : 0);
+        } else {
+            // In demo mode, use the static value field
+            return typeof dp.value === 'number' ? dp.value : 0;
+        }
+    };
+    
+    // Transform data points to use appropriate values based on mode
+    const transformedDataPoints = dataPoints.map(dp => ({
+        ...dp,
+        value: getDisplayValue(dp)
+    }));
+    
+    const keyMetrics = transformedDataPoints.filter(dp => KEY_METRICS_VARS.includes(dp.variableName));
+    const chartDataPoints = transformedDataPoints.filter(dp => !KEY_METRICS_VARS.includes(dp.variableName));
     console.log(`[Dashboard] Filtered into ${keyMetrics.length} key metrics and ${chartDataPoints.length} chart data points.`);
 
 

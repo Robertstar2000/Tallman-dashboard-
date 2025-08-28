@@ -1,0 +1,17 @@
+# Model Context Protocol Server Dependencies
+mcp>=1.0.0
+pyodbc>=5.0.0
+asyncio-mqtt>=0.11.0
+python-dotenv>=1.0.0
+mdb-reader>=0.2.0
+
+# Additional dependencies for database connections
+# For SQL Server connections (P21)
+# pyodbc already handles SQL Server
+
+# For MS Access connections (POR)  
+# Using pyodbc with Microsoft Access Driver instead
+
+# Development and testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0

@@ -1,6 +1,6 @@
 
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, ComposedChart 
@@ -15,7 +15,8 @@ interface ChartCardProps {
 const COLORS = {
     'Columbus': '#0088FE',
     'Addison': '#00C49F',
-    'City': '#FFBB28'
+    'Lake City': '#FFBB28',
+    'City': '#FF8042'
 };
 
 const arAgingOrder = ["Current", "1-30", "31-60", "61-90", "90+"];
@@ -121,32 +122,32 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 chartData = transformData(['payable', 'receivable', 'overdue'], 'month', onlineData);
                 return (
                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
                             <YAxis fontSize={12} tickFormatter={(value) => `${value / 1000}k`} />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            <Area type="monotone" dataKey="payable" stackId="1" stroke="#8884d8" fill="#8884d8" />
-                            <Line type="monotone" dataKey="receivable" stroke="#82ca9d" />
-                            <Line type="monotone" dataKey="overdue" stroke="#ffc658" />
-                        </AreaChart>
+                            <Bar dataKey="payable" fill="#8884d8" />
+                            <Bar dataKey="receivable" fill="#82ca9d" />
+                            <Bar dataKey="overdue" fill="#ffc658" />
+                        </BarChart>
                     </ResponsiveContainer>
                 );
 
             case ChartGroup.CUSTOMER_METRICS:
-                chartData = transformData(['New Customers', 'Prospects'], 'month', onlineData);
+                chartData = transformData(['new_customers', 'retained_customers'], 'month', onlineData);
                 return (
                     <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
                             <YAxis fontSize={12}/>
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            <Line type="monotone" dataKey="New Customers" stroke="#8884d8" />
-                            <Line type="monotone" dataKey="Prospects" stroke="#82ca9d" />
-                        </LineChart>
+                            <Bar dataKey="new_customers" fill="#8884d8" />
+                            <Bar dataKey="retained_customers" fill="#82ca9d" />
+                        </BarChart>
                     </ResponsiveContainer>
                 );
 
@@ -154,16 +155,16 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 chartData = transformData(['P21', 'POR', 'Total'], 'month', onlineData);
                  return (
                     <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
                             <YAxis fontSize={12} tickFormatter={(value) => `$${value / 1000000}M`}/>
                             <Tooltip content={<CustomTooltip />} formatter={(value: number) => formatCurrency(value)} />
                             <Legend />
-                            <Line type="monotone" dataKey="P21" stroke="#8884d8" />
-                            <Line type="monotone" dataKey="POR" stroke="#82ca9d" />
-                            <Line type="monotone" dataKey="Total" stroke="#ffc658" />
-                        </LineChart>
+                            <Bar dataKey="P21" fill="#8884d8" />
+                            <Bar dataKey="POR" fill="#82ca9d" />
+                            <Bar dataKey="Total" fill="#ffc658" />
+                        </BarChart>
                     </ResponsiveContainer>
                 );
 
@@ -187,31 +188,70 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                  chartData = transformData(['New Rentals', 'Open Rentals', 'Rental Value'], 'month', onlineData);
                  return (
                     <ResponsiveContainer width="100%" height="100%">
-                         <ComposedChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
-                            <YAxis yAxisId="left" fontSize={12} />
-                            <YAxis yAxisId="right" orientation="right" fontSize={12} />
+                            <YAxis fontSize={12} />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            <Bar yAxisId="left" dataKey="New Rentals" barSize={20} fill="#413ea0" />
-                            <Bar yAxisId="left" dataKey="Open Rentals" barSize={20} fill="#82ca9d" />
-                            <Line yAxisId="right" type="monotone" dataKey="Rental Value" stroke="#ff7300" />
-                         </ComposedChart>
+                            <Bar dataKey="New Rentals" fill="#413ea0" />
+                            <Bar dataKey="Open Rentals" fill="#82ca9d" />
+                            <Bar dataKey="Rental Value" fill="#ff7300" />
+                        </BarChart>
                     </ResponsiveContainer>
                 );
 
             case ChartGroup.SITE_DISTRIBUTION:
-                chartData = onlineData.map(dp => ({ name: dp.dataPoint, value: Number(dp.value) }));
+                chartData = onlineData.map(dp => ({ 
+                    name: dp.dataPoint, 
+                    value: Number(dp.value) || 0 
+                }));
+                
+                // Filter out zero values and ensure we have valid data
+                chartData = chartData.filter(entry => entry.value > 0);
+                
+                if (chartData.length === 0) {
+                    return (
+                        <div className="flex items-center justify-center h-full text-text-secondary">
+                            <p>No site distribution data available</p>
+                        </div>
+                    );
+                }
+                
                 const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
-                 return (
-                     <ResponsiveContainer width="100%" height="100%">
+                console.log(`[ChartCard] Site Distribution data:`, chartData, `Total: ${total}`);
+                
+                return (
+                    <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                            <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}>
-                                 {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[entry.name as keyof typeof COLORS]} />)}
+                            <Pie 
+                                data={chartData} 
+                                dataKey="value" 
+                                nameKey="name" 
+                                cx="50%" 
+                                cy="50%" 
+                                innerRadius={60} 
+                                outerRadius={80} 
+                                paddingAngle={5}
+                            >
+                                {chartData.map((entry, index) => (
+                                    <Cell 
+                                        key={`cell-${index}`} 
+                                        fill={COLORS[entry.name as keyof typeof COLORS] || '#8884d8'} 
+                                    />
+                                ))}
                             </Pie>
-                            <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                             <Legend formatter={(value, entry) => <span style={{ color: 'var(--color-text-primary)' }}>{value} - {formatCurrency(entry.payload?.value || 0)}</span>} />
+                            <Tooltip 
+                                formatter={(value: number) => [value.toLocaleString(), 'Orders']}
+                                labelFormatter={(label) => `Location: ${label}`}
+                            />
+                            <Legend 
+                                formatter={(value, entry) => (
+                                    <span style={{ color: 'var(--color-text-primary)' }}>
+                                        {value} - {entry.payload?.value?.toLocaleString() || 0} orders
+                                    </span>
+                                )} 
+                            />
                         </PieChart>
                     </ResponsiveContainer>
                 );
@@ -236,16 +276,15 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 chartData = transformData(['Orders', 'Revenue'], 'month', onlineData);
                  return (
                     <ResponsiveContainer width="100%" height="100%">
-                         <ComposedChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
-                            <YAxis yAxisId="left" fontSize={12} />
-                            <YAxis yAxisId="right" orientation="right" fontSize={12} tickFormatter={(value) => `$${value / 1000}k`} />
+                            <YAxis fontSize={12} />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            <Bar yAxisId="left" dataKey="Orders" barSize={20} fill="#8884d8" />
-                            <Line yAxisId="right" type="monotone" dataKey="Revenue" stroke="#82ca9d" />
-                         </ComposedChart>
+                            <Bar dataKey="Orders" fill="#8884d8" />
+                            <Bar dataKey="Revenue" fill="#82ca9d" />
+                        </BarChart>
                     </ResponsiveContainer>
                 );
 
@@ -322,16 +361,35 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
 }
 
 
-const ChartCard: React.FC<ChartCardProps> = ({ title, data }) => {
+const ChartCard: React.FC<ChartCardProps> = memo(({ title, data }) => {
     console.log(`[ChartCard] Component rendering for "${title}" with ${data.length} data points.`);
+    
+    // Memoize the chart rendering to prevent unnecessary re-renders
+    const memoizedChart = useMemo(() => {
+        return renderChart(title, data);
+    }, [title, data]);
+
     return (
         <div className="bg-primary p-4 rounded-lg shadow-lg h-80 flex flex-col">
             <h3 className="text-md font-semibold text-text-primary mb-4">{title}</h3>
             <div className="flex-grow">
-               {renderChart(title, data)}
+               {memoizedChart}
             </div>
         </div>
     );
-};
+}, (prevProps, nextProps) => {
+    // Custom comparison function - only re-render if title changes or data values change
+    if (prevProps.title !== nextProps.title) return false;
+    if (prevProps.data.length !== nextProps.data.length) return false;
+    
+    // Compare actual data values to prevent re-render when only object references change
+    return prevProps.data.every((prevItem, index) => {
+        const nextItem = nextProps.data[index];
+        return prevItem.id === nextItem.id && 
+               prevItem.value === nextItem.value && 
+               prevItem.dataPoint === nextItem.dataPoint &&
+               prevItem.lastUpdated === nextItem.lastUpdated;
+    });
+});
 
 export default ChartCard;

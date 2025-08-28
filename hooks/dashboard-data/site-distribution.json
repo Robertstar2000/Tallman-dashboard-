@@ -1,0 +1,50 @@
+[
+    {
+        "id": 47,
+        "chartGroup": "Site Distribution",
+        "variableName": "Site Distribution Addison",
+        "dataPoint": "Addison",
+        "serverName": "P21",
+        "tableName": "oe_hdr",
+        "productionSqlExpression": "SELECT COUNT(*) as result FROM branch WHERE location_name = 'Addison';",
+        "value": 1,
+        "prodValue": null,
+        "calculationType": "Count distinct orders shipped to the specified geographical location.",
+        "lastUpdated": "2024-08-01T00:00:00.000Z",
+        "valueColumn": "total_orders",
+        "filterColumn": "ship2_city",
+        "filterValue": "Addison"
+    },
+    {
+        "id": 48,
+        "chartGroup": "Site Distribution",
+        "variableName": "Site Distribution Columbus",
+        "dataPoint": "Columbus",
+        "serverName": "P21",
+        "tableName": "oe_hdr",
+        "productionSqlExpression": "SELECT COUNT(*) as result FROM branch WHERE location_name = 'Columbus';",
+        "value": 1,
+        "prodValue": null,
+        "calculationType": "Count distinct orders shipped to the specified geographical location.",
+        "lastUpdated": "2024-08-01T00:00:00.000Z",
+        "valueColumn": "total_orders",
+        "filterColumn": "ship2_city",
+        "filterValue": "Columbus"
+    },
+    {
+        "id": 49,
+        "chartGroup": "Site Distribution",
+        "variableName": "Site Distribution Lake City",
+        "dataPoint": "Lake City",
+        "serverName": "P21",
+        "tableName": "oe_hdr",
+        "productionSqlExpression": "SELECT COUNT(*) as result FROM branch WHERE location_name = 'Lake City';",
+        "value": 1,
+        "prodValue": null,
+        "calculationType": "Count distinct orders shipped to the specified geographical location.",
+        "lastUpdated": "2024-08-01T00:00:00.000Z",
+        "valueColumn": "total_orders",
+        "filterColumn": "ship2_city",
+        "filterValue": "Lake City"
+    }
+]
