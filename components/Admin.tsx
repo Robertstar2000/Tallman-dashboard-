@@ -419,6 +419,9 @@ const Admin: React.FC<AdminProps> = ({
                         <button onClick={handleBackupData} className="px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700">
                             Backup
                         </button>
+                        <button onClick={handleRestoreFromBackup} className="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                            Restore From Backup
+                        </button>
                         <button onClick={resetDataToDefaults} className="px-3 py-2 text-sm font-medium text-white bg-yellow-600 rounded-md hover:bg-yellow-700">
                             Reset to Defaults
                         </button>
