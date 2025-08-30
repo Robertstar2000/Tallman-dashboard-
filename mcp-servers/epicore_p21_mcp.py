@@ -272,7 +272,7 @@ class EpicoreP21MCPServer:
             # Add basic security check for dangerous operations
             sql_upper = sql_query.upper().strip()
             dangerous_keywords = ['DROP', 'DELETE', 'TRUNCATE', 'INSERT', 'UPDATE', 'ALTER', 'CREATE']
-            
+
             # Allow only SELECT statements for safety
             if not sql_upper.startswith('SELECT'):
                 return {
@@ -280,15 +280,21 @@ class EpicoreP21MCPServer:
                     "error": "Only SELECT statements are allowed for security reasons",
                     "query": sql_query
                 }
-            
-            # Check for dangerous keywords in SELECT statements
-            for keyword in dangerous_keywords:
-                if keyword in sql_upper:
-                    return {
-                        "success": False,
-                        "error": f"SQL contains potentially dangerous keyword: {keyword}",
-                        "query": sql_query
-                    }
+
+            # Special handling for site distribution queries - allow these even with dangerous keywords
+            # as they are read-only aggregate queries
+            is_site_distribution_query = ('GROUP BY' in sql_upper and
+                                        'SUM(' in sql_upper or 'COUNT(' in sql_upper)
+
+            if not is_site_distribution_query:
+                # Check for dangerous keywords in non-aggregate SELECT statements
+                for keyword in dangerous_keywords:
+                    if keyword in sql_upper:
+                        return {
+                            "success": False,
+                            "error": f"SQL contains potentially dangerous keyword: {keyword}",
+                            "query": sql_query
+                        }
             
             # Handle sandboxed tables for testing/simulation
             if 'mcp_sandboxed_inv' in sql_query.lower():

@@ -152,34 +152,90 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 );
 
             case ChartGroup.HISTORICAL_DATA:
-                chartData = transformData(['P21', 'POR', 'Total'], 'month', onlineData);
-                 return (
+                // Handle historical data specially - it has both P21 and POR activities in different dataPoint formats
+                console.log(`[ChartCard - Historical Data] Processing ${onlineData.length} historical data points:`, onlineData);
+
+                // Group by month and server for historical data
+                const historicalGroupedData = onlineData.reduce((acc, dp) => {
+                    if (!dp || !dp.dataPoint || !dp.filterValue) {
+                        console.warn(`[ChartCard - Historical Data] Invalid historical data point:`, dp);
+                        return acc;
+                    }
+
+                    const serverName = dp.serverName === 'P21' ? 'P21 Activities' :
+                                      dp.serverName === 'POR' ? 'POR Activities' : 'Other Activities';
+
+                    const monthOffset = dp.filterValue as string;
+                    const offsetMatch = monthOffset.match(/current_month-(\d+)/);
+
+                    if (!offsetMatch) return acc;
+
+                    const offset = parseInt(offsetMatch[1], 10);
+                    const date = new Date();
+                    date.setMonth(date.getMonth() - offset);
+
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    const displayName = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+
+                    if (!acc[monthKey]) {
+                        acc[monthKey] = { name: displayName, displayName, monthKey };
+                    }
+
+                    // Set the value based on server type
+                    if (dp.serverName === 'P21') {
+                        acc[monthKey]['P21 Activities'] = Number(dp.value) || 0;
+                    } else if (dp.serverName === 'POR') {
+                        acc[monthKey]['POR Activities'] = Number(dp.value) || 0;
+                    }
+
+                    return acc;
+                }, {} as Record<string, any>);
+
+                chartData = Object.values(historicalGroupedData)
+                    .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+
+                console.log(`[ChartCard - Historical Data] Transformed historical data (${chartData.length} entries):`, chartData);
+
+                if (chartData.length === 0) {
+                    console.warn(`[ChartCard - Historical Data] No valid data after processing, showing fallback message`);
+                    return (
+                        <div className="flex items-center justify-center h-full text-text-secondary">
+                            <p>No historical data available</p>
+                            <p className="text-xs mt-2">Check console for debug info</p>
+                        </div>
+                    );
+                }
+
+                return (
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                        <ComposedChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
-                            <YAxis fontSize={12} tickFormatter={(value) => `$${value / 1000000}M`}/>
-                            <Tooltip content={<CustomTooltip />} formatter={(value: number) => formatCurrency(value)} />
+                            <YAxis fontSize={12} tickFormatter={(value) => value.toLocaleString()} />
+                            <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            <Bar dataKey="P21" fill="#8884d8" />
-                            <Bar dataKey="POR" fill="#82ca9d" />
-                            <Bar dataKey="Total" fill="#ffc658" />
-                        </BarChart>
+                            <Bar dataKey="P21 Activities" fill="#0088FE" name="P21 System Activities" />
+                            <Line type="monotone" dataKey="POR Activities" stroke="#00C49F" strokeWidth={2} name="POR Rental Activities" />
+                        </ComposedChart>
                     </ResponsiveContainer>
                 );
 
             case ChartGroup.INVENTORY:
-                chartData = transformData(['InStock', 'onOrder'], 'department', onlineData);
+                // For department-based inventory, create a simple bar chart showing inventory value per department
+                chartData = onlineData.map(dp => ({ 
+                    name: dp.variableName.replace(' Department', ''), // Remove "Department" suffix for cleaner display
+                    value: Number(dp.value) || 0 
+                }));
+                
                 return (
                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
-                            <YAxis fontSize={12} />
-                            <Tooltip content={<CustomTooltip />} />
+                            <YAxis fontSize={12} tickFormatter={(value) => `$${value / 1000}k`} />
+                            <Tooltip content={<CustomTooltip />} formatter={(value: number) => formatCurrency(value)} />
                             <Legend />
-                            <Bar dataKey="InStock" fill="#8884d8" />
-                            <Bar dataKey="onOrder" fill="#82ca9d" />
+                            <Bar dataKey="value" name="Inventory Value" fill="#8884d8" />
                         </BarChart>
                     </ResponsiveContainer>
                 )
@@ -202,55 +258,62 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 );
 
             case ChartGroup.SITE_DISTRIBUTION:
-                chartData = onlineData.map(dp => ({ 
-                    name: dp.dataPoint, 
-                    value: Number(dp.value) || 0 
+                console.log(`[ChartCard - Site Distribution] Processing ${onlineData.length} data points:`, onlineData);
+
+                chartData = onlineData.map(dp => ({
+                    name: dp.dataPoint,
+                    value: Number(dp.value) || 0
                 }));
-                
+
+                console.log(`[ChartCard - Site Distribution] After mapping (${chartData.length} entries):`, chartData);
+
                 // Filter out zero values and ensure we have valid data
                 chartData = chartData.filter(entry => entry.value > 0);
-                
+                console.log(`[ChartCard - Site Distribution] After filtering zero values (${chartData.length} entries):`, chartData);
+
                 if (chartData.length === 0) {
+                    console.warn(`[ChartCard - Site Distribution] No valid data after filtering, showing fallback message`);
                     return (
                         <div className="flex items-center justify-center h-full text-text-secondary">
                             <p>No site distribution data available</p>
+                            <p className="text-xs mt-2">Check console for debug info</p>
                         </div>
                     );
                 }
-                
+
                 const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
-                console.log(`[ChartCard] Site Distribution data:`, chartData, `Total: ${total}`);
-                
+                console.log(`[ChartCard - Site Distribution] Rendering pie chart with ${chartData.length} entries. Total: ${total}`);
+
                 return (
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                            <Pie 
-                                data={chartData} 
-                                dataKey="value" 
-                                nameKey="name" 
-                                cx="50%" 
-                                cy="50%" 
-                                innerRadius={60} 
-                                outerRadius={80} 
+                            <Pie
+                                data={chartData}
+                                dataKey="value"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
                                 paddingAngle={5}
                             >
                                 {chartData.map((entry, index) => (
-                                    <Cell 
-                                        key={`cell-${index}`} 
-                                        fill={COLORS[entry.name as keyof typeof COLORS] || '#8884d8'} 
+                                    <Cell
+                                        key={`cell-${index}`}
+                                        fill={COLORS[entry.name as keyof typeof COLORS] || '#8884d8'}
                                     />
                                 ))}
                             </Pie>
-                            <Tooltip 
+                            <Tooltip
                                 formatter={(value: number) => [value.toLocaleString(), 'Orders']}
                                 labelFormatter={(label) => `Location: ${label}`}
                             />
-                            <Legend 
+                            <Legend
                                 formatter={(value, entry) => (
                                     <span style={{ color: 'var(--color-text-primary)' }}>
                                         {value} - {entry.payload?.value?.toLocaleString() || 0} orders
                                     </span>
-                                )} 
+                                )}
                             />
                         </PieChart>
                     </ResponsiveContainer>
@@ -273,17 +336,30 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 );
 
             case ChartGroup.WEB_ORDERS:
-                chartData = transformData(['Orders', 'Revenue'], 'month', onlineData);
-                 return (
+                console.log(`[ChartCard - Web Orders] Processing ${onlineData.length} data points:`, onlineData.map(dp => ({filterValue: dp.filterValue, dataPoint: dp.dataPoint, value: dp.value})));
+
+                // Use transformData to convert our time series data
+                chartData = transformData(['Web Orders'], 'month', onlineData);
+
+                console.log(`[ChartCard - Web Orders] Transformed data (${chartData.length} entries):`, chartData);
+
+                if (chartData.length === 0) {
+                    return (
+                        <div className="flex items-center justify-center h-full text-text-secondary">
+                            <p>No web orders data available yet</p>
+                        </div>
+                    );
+                }
+
+                return (
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
-                            <YAxis fontSize={12} />
+                            <YAxis fontSize={12} tickFormatter={(value) => value.toLocaleString()} />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            <Bar dataKey="Orders" fill="#8884d8" />
-                            <Bar dataKey="Revenue" fill="#82ca9d" />
+                            <Bar dataKey="Web Orders" fill="#0088d8" name="Web Orders" />
                         </BarChart>
                     </ResponsiveContainer>
                 );

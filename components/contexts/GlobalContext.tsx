@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { safeLocalStorage } from '../../services/storageService';
+import { ChartGroup } from '../../types';
 
 type Theme = 'light' | 'dark';
 type Mode = 'demo' | 'production';
@@ -9,6 +10,8 @@ interface GlobalContextType {
     toggleTheme: () => void;
     mode: Mode;
     setMode: (mode: Mode) => void;
+    selectedChartGroup: string;
+    setSelectedChartGroup: (group: string) => void;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
@@ -16,6 +19,7 @@ const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     const [theme, setTheme] = useState<Theme>(() => (safeLocalStorage.getItem('theme') as Theme) || 'dark');
     const [mode, setMode] = useState<Mode>('production');
+    const [selectedChartGroup, setSelectedChartGroup] = useState<string>('All');
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -32,7 +36,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <GlobalContext.Provider value={{ theme, toggleTheme, mode, setMode }}>
+        <GlobalContext.Provider value={{ theme, toggleTheme, mode, setMode, selectedChartGroup, setSelectedChartGroup }}>
             {children}
         </GlobalContext.Provider>
     );

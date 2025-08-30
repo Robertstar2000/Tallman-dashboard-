@@ -4,10 +4,11 @@ import { DashboardDataPoint, ChartGroup, ServerName, ConnectionDetails } from '.
 import { useGlobal } from './contexts/GlobalContext';
 import ConnectionStatusModal from './ConnectionStatusModal';
 import HelpModal from './HelpModal';
+import { safeLocalStorage } from '../services/storageService';
 
 // Memoized table row component to prevent unnecessary re-renders
 const TableRow = memo(({ row, handleInputChange, handleSaveRow, savingRows }: {
-    row: DashboardDataPoint;
+    row: DashboardDataPoint & { displayId: number };
     handleInputChange: (id: number, field: keyof DashboardDataPoint, value: any) => void;
     handleSaveRow: (id: number) => Promise<void>;
     savingRows: Set<number>;
@@ -16,7 +17,7 @@ const TableRow = memo(({ row, handleInputChange, handleSaveRow, savingRows }: {
     
     return (
         <tr key={row.id}>
-            <td className="px-6 py-4 whitespace-nowrap text-sm">{row.id}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm">{row.displayId}</td>
             <td className="px-6 py-4 text-sm">
                 <select
                     value={row.chartGroup}
@@ -104,6 +105,8 @@ interface AdminProps {
     isMcpExecuting: boolean;
     statusMessage: string;
     resetDataToDefaults: () => void;
+    forceExecuteChartGroup?: (chartGroup: string, serverFilter?: ServerName) => Promise<boolean>;
+    forceExecuteHistoricalDataP21?: () => Promise<boolean>;
 }
 
 const Admin: React.FC<AdminProps> = ({
@@ -116,12 +119,13 @@ const Admin: React.FC<AdminProps> = ({
     isMcpExecuting,
     statusMessage,
     resetDataToDefaults,
+    forceExecuteChartGroup,
+    forceExecuteHistoricalDataP21,
 }) => {
-    const { mode, setMode } = useGlobal();
+    const { mode, setMode, selectedChartGroup, setSelectedChartGroup } = useGlobal();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
     const [connectionDetails, setConnectionDetails] = useState<ConnectionDetails[]>([]);
-    const [selectedChartGroup, setSelectedChartGroup] = useState<string>('All');
     const [savingRows, setSavingRows] = useState<Set<number>>(new Set());
 
     const handleTestConnections = async () => {
@@ -169,12 +173,18 @@ const Admin: React.FC<AdminProps> = ({
 
     const handleBackupData = useCallback(() => {
         try {
+            // Get the current data from localStorage to ensure we have the latest changes
+            const storedData = safeLocalStorage.getItem('dashboard_data_points');
+            const currentDataPoints = storedData ? JSON.parse(storedData) : dataPoints;
+            
+            console.log(`[Admin] Creating backup with ${currentDataPoints.length} data points including SQL changes`);
+            
             // Group data points by chart group to match the original JSON file structure
-            const groupedData = dataPoints.reduce((acc, point) => {
+            const groupedData = currentDataPoints.reduce((acc, point) => {
                 const group = point.chartGroup;
                 if (!acc[group]) acc[group] = [];
                 
-                // Create a clean copy without runtime fields like prodValue
+                // Create a clean copy without runtime fields like prodValue, but keep SQL changes
                 const cleanPoint = {
                     id: point.id,
                     chartGroup: point.chartGroup,
@@ -182,36 +192,46 @@ const Admin: React.FC<AdminProps> = ({
                     dataPoint: point.dataPoint,
                     serverName: point.serverName,
                     tableName: point.tableName,
-                    productionSqlExpression: point.productionSqlExpression,
+                    productionSqlExpression: point.productionSqlExpression, // This includes any SQL changes
                     value: point.value,
                     calculationType: point.calculationType,
-                    lastUpdated: point.lastUpdated
+                    lastUpdated: point.lastUpdated,
+                    // Include additional fields that might have been added
+                    ...(point.valueColumn && { valueColumn: point.valueColumn }),
+                    ...(point.filterColumn && { filterColumn: point.filterColumn }),
+                    ...(point.filterValue && { filterValue: point.filterValue })
                 };
                 
                 acc[group].push(cleanPoint);
                 return acc;
             }, {} as Record<string, any[]>);
 
-            // Create backup data with metadata
+            // Create backup data with metadata including SQL change tracking
             const backupData = {
                 metadata: {
                     exportDate: new Date().toISOString(),
-                    totalRecords: dataPoints.length,
+                    totalRecords: currentDataPoints.length,
                     mode: mode,
-                    version: "1.0.0"
+                    version: "1.0.0",
+                    includesSqlChanges: true,
+                    backupType: "complete_with_modifications"
                 },
                 data: groupedData,
-                allDataPoints: dataPoints.map(point => ({
+                allDataPoints: currentDataPoints.map(point => ({
                     id: point.id,
                     chartGroup: point.chartGroup,
                     variableName: point.variableName,
                     dataPoint: point.dataPoint,
                     serverName: point.serverName,
                     tableName: point.tableName,
-                    productionSqlExpression: point.productionSqlExpression,
+                    productionSqlExpression: point.productionSqlExpression, // Includes SQL changes
                     value: point.value,
                     calculationType: point.calculationType,
-                    lastUpdated: point.lastUpdated
+                    lastUpdated: point.lastUpdated,
+                    // Include additional fields
+                    ...(point.valueColumn && { valueColumn: point.valueColumn }),
+                    ...(point.filterColumn && { filterColumn: point.filterColumn }),
+                    ...(point.filterValue && { filterValue: point.filterValue })
                 }))
             };
 
@@ -220,15 +240,17 @@ const Admin: React.FC<AdminProps> = ({
             const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
             const link = document.createElement('a');
             link.href = url;
-            link.download = `dashboard-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.download = `dashboard-backup-with-sql-changes-${timestamp}.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
             
-            console.log('Dashboard data backup created successfully');
+            console.log('Dashboard data backup created successfully with SQL changes');
+            alert(`Backup created successfully!\n\nFile: dashboard-backup-with-sql-changes-${timestamp}.json\nRecords: ${currentDataPoints.length}\nIncludes: All SQL modifications and admin changes`);
             
         } catch (error) {
             console.error('Error creating backup:', error);
@@ -319,7 +341,8 @@ const Admin: React.FC<AdminProps> = ({
                 restoredDataPoints.forEach((point: DashboardDataPoint) => {
                     Object.keys(point).forEach(key => {
                         if (key !== 'id') {
-                            updateDataPoint(point.id, key as keyof DashboardDataPoint, String((point as any)[key]));
+                            const value = (point as any)[key];
+                            updateDataPoint(point.id, key as keyof DashboardDataPoint, String(value ?? ''));
                         }
                     });
                 });
@@ -341,12 +364,49 @@ const Admin: React.FC<AdminProps> = ({
         document.body.removeChild(fileInput);
     }, [updateDataPoint]);
 
-    // Filter data points based on selected chart group
-    const filteredDataPoints = useMemo(() => {
+    // Debug: Log chart group values to understand the issue
+    console.log('[Admin] Available chart groups in data:', [...new Set(dataPoints.map(p => p.chartGroup))]);
+    console.log('[Admin] Selected chart group:', selectedChartGroup);
+    console.log('[Admin] ChartGroup enum values:', Object.values(ChartGroup));
+
+    // Debug: Log data points for the mentioned chart groups
+    const siteDistribution = dataPoints.filter(p => p.chartGroup === 'Site Distribution');
+    const inventory = dataPoints.filter(p => p.chartGroup === 'Inventory');
+    const customerMetrics = dataPoints.filter(p => p.chartGroup === 'Customer Metrics');
+    const webOrders = dataPoints.filter(p => p.chartGroup === 'Web Orders');
+
+    console.log('[Admin] Site Distribution data points:', siteDistribution.map(p => ({ id: p.id, prodValue: p.prodValue, value: p.value })));
+    console.log('[Admin] Inventory data points:', inventory.map(p => ({ id: p.id, prodValue: p.prodValue, value: p.value })));
+    console.log('[Admin] Customer Metrics data points:', customerMetrics.map(p => ({ id: p.id, prodValue: p.prodValue, value: p.value })));
+    console.log('[Admin] Web Orders data points:', webOrders.map(p => ({ id: p.id, prodValue: p.prodValue, value: p.value })));
+
+    // Filter and sort data points based on selected chart group
+    const filteredAndSortedDataPoints = useMemo(() => {
+        let filtered;
+
         if (selectedChartGroup === 'All') {
-            return dataPoints;
+            filtered = [...dataPoints];
+            // When "All" is selected: sort by chart group first, then by ID numeric order within each group
+            filtered.sort((a, b) => {
+                if (a.chartGroup !== b.chartGroup) {
+                    return a.chartGroup.localeCompare(b.chartGroup);
+                }
+                return a.id - b.id;
+            });
+            console.log(`[Admin] "All" selected: showing all ${filtered.length} items sorted by group then ID`);
+        } else {
+            // When a specific chart group is selected: show ONLY items in that group
+            filtered = dataPoints.filter(point => point.chartGroup === selectedChartGroup);
+            // Sort by ID numeric order (1, 2, 3, 4... ascending)
+            filtered.sort((a, b) => a.id - b.id);
+            console.log(`[Admin] "${selectedChartGroup}" selected: showing only ${filtered.length} items from this group, sorted by ID`);
         }
-        return dataPoints.filter(point => point.chartGroup === selectedChartGroup);
+
+        // Add sequential display ID (1-based numbering) for filtered results
+        return filtered.map((point, index) => ({
+            ...point,
+            displayId: index + 1 // 1-based sequential numbering for filtered results
+        }));
     }, [dataPoints, selectedChartGroup]);
 
     // Get unique chart groups for the dropdown
@@ -427,20 +487,159 @@ const Admin: React.FC<AdminProps> = ({
                         </button>
                     </div>
                 </div>
-                
+
+                {/* Manual Query Execution Section */}
+                <div className="border-t border-secondary pt-4 mt-4">
+                    <h3 className="font-semibold text-text-primary mb-2 text-sm">Manual Query Execution</h3>
+                    <p className="text-xs text-text-secondary mb-3">
+                        Use these buttons to manually execute specific chart groups, useful for debugging failed queries.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        {forceExecuteChartGroup && (
+                            <>
+                                {/* 10 Chart Group Force Execution Buttons */}
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing Key Metrics queries...');
+                                        alert('Starting force execution of Key Metrics queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Key Metrics');
+                                        alert('Completed Key Metrics execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                                >
+                                    Force: Key Metrics
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing Accounts queries...');
+                                        alert('Starting force execution of Accounts queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Accounts');
+                                        alert('Completed Accounts execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                                >
+                                    Force: Accounts
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing Customer Metrics queries...');
+                                        alert('Starting force execution of Customer Metrics queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Customer Metrics');
+                                        alert('Completed Customer Metrics execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-cyan-600 rounded-md hover:bg-cyan-700"
+                                >
+                                    Force: Customer Metrics
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing Inventory queries...');
+                                        alert('Starting force execution of Inventory queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Inventory');
+                                        alert('Completed Inventory execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700"
+                                >
+                                    Force: Inventory
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing POR Overview queries...');
+                                        alert('Starting force execution of POR Overview queries. Check console for progress.');
+                                        await forceExecuteChartGroup('POR Overview');
+                                        alert('Completed POR Overview execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700"
+                                >
+                                    Force: POR Overview
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing Daily Orders queries...');
+                                        alert('Starting force execution of Daily Orders queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Daily Orders');
+                                        alert('Completed Daily Orders execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-rose-600 rounded-md hover:bg-rose-700"
+                                >
+                                    Force: Daily Orders
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing AR Aging queries...');
+                                        alert('Starting force execution of AR Aging queries. Check console for progress.');
+                                        await forceExecuteChartGroup('AR Aging');
+                                        alert('Completed AR Aging execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700"
+                                >
+                                    Force: AR Aging
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing Historical Data queries...');
+                                        alert('Starting force execution of Historical Data queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Historical Data');
+                                        alert('Completed Historical Data execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700"
+                                >
+                                    Force: Historical Data
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing Site Distribution queries...');
+                                        alert('Starting force execution of Site Distribution queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Site Distribution');
+                                        alert('Completed Site Distribution execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                                >
+                                    Force: Site Distribution
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        console.log('Force executing Web Orders queries...');
+                                        alert('Starting force execution of Web Orders queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Web Orders');
+                                        alert('Completed Web Orders execution.');
+                                    }}
+                                    className="px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700"
+                                >
+                                    Force: Web Orders
+                                </button>
+                            </>
+                        )}
+                    </div>
+                    <div className="text-xs text-text-secondary mt-2">
+                        📊 Manual execution buttons for all 10 chart groups - use these to bypass the automatic worker and debug specific query failures.
+                    </div>
+                </div>
+
                 <div className="flex items-center space-x-4">
                     <span className="font-semibold">Filter by Chart Group:</span>
                     <select
                         value={selectedChartGroup}
-                        onChange={(e) => setSelectedChartGroup(e.target.value)}
+                        onChange={(e) => {
+                            console.log(`[Admin] Select changed from "${selectedChartGroup}" to "${e.target.value}"`);
+                            setSelectedChartGroup(e.target.value);
+                        }}
                         className="bg-primary text-text-primary p-2 rounded border border-transparent focus:border-accent focus:ring-0 text-sm min-w-[200px]"
                     >
                         {chartGroups.map(group => (
                             <option key={group} value={group}>{group}</option>
                         ))}
                     </select>
-                    <span className="text-sm text-text-secondary">
-                        Showing {filteredDataPoints.length} of {dataPoints.length} records
+                    <span className="text-sm text-text-secondary" onClick={() => {
+                        console.log('[Admin] Stats clicked - Current filter state:', {
+                            selectedChartGroup,
+                            filteredCount: filteredAndSortedDataPoints.length,
+                            totalCount: dataPoints.length,
+                            uniqueChartGroups: [...new Set(dataPoints.map(p => p.chartGroup))].sort(),
+                            chartGroupsOptions: chartGroups
+                        });
+                    }}>
+                        Showing {filteredAndSortedDataPoints.length} of {dataPoints.length} records (click for debug)
                     </span>
                 </div>
             </div>
@@ -457,17 +656,15 @@ const Admin: React.FC<AdminProps> = ({
                         </tr>
                     </thead>
                     <tbody className="bg-primary divide-y divide-secondary">
-                        {filteredDataPoints
-                            .sort((a, b) => a.id - b.id)
-                            .map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    row={row}
-                                    handleInputChange={handleInputChange}
-                                    handleSaveRow={handleSaveRow}
-                                    savingRows={savingRows}
-                                />
-                            ))}
+                        {filteredAndSortedDataPoints.map((row) => (
+                            <TableRow
+                                key={row.id}
+                                row={row}
+                                handleInputChange={handleInputChange}
+                                handleSaveRow={handleSaveRow}
+                                savingRows={savingRows}
+                            />
+                        ))}
                     </tbody>
                 </table>
             </div>

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { generateSqlResponse } from '../services/geminiService';
 import * as mcpService from '../services/mcpService';
 import { useGlobal } from './contexts/GlobalContext';
-import { DashboardDataPoint, ServerName } from '../types';
+import { DashboardDataPoint, ServerName, ChartGroup } from '../types';
 
 interface SqlQueryToolProps {
     dataPoints: DashboardDataPoint[];
@@ -11,7 +11,7 @@ interface SqlQueryToolProps {
 }
 
 const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint }) => {
-    const { mode } = useGlobal();
+    const { mode, selectedChartGroup } = useGlobal();
     const [query, setQuery] = useState('SELECT COUNT(order_no) AS result FROM oe_hdr;');
     const [server, setServer] = useState<ServerName>(ServerName.P21);
     const [result, setResult] = useState<string | null>(null);
@@ -21,6 +21,7 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
     const [metricId, setMetricId] = useState<string>('');
     const [loadedMetricId, setLoadedMetricId] = useState<number | null>(null);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+    const [localChartGroupFilter, setLocalChartGroupFilter] = useState<string>('All');
 
 
     useEffect(() => {
@@ -30,21 +31,59 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
         }
     }, [feedbackMessage]);
 
+    // Create the same filtered and sorted data points as the Admin component
+    const filteredAndSortedDataPoints = useMemo(() => {
+        let filtered;
+        if (localChartGroupFilter === 'All') {
+            filtered = [...dataPoints];
+        } else {
+            filtered = dataPoints.filter(point => point.chartGroup === localChartGroupFilter);
+        }
+        
+        // Sort the filtered data
+        if (localChartGroupFilter === 'All') {
+            // Sort by chart group first, then by variable name
+            filtered.sort((a, b) => {
+                if (a.chartGroup !== b.chartGroup) {
+                    return a.chartGroup.localeCompare(b.chartGroup);
+                }
+                return a.variableName.localeCompare(b.variableName);
+            });
+        } else {
+            // Sort by variable name within the selected group
+            filtered.sort((a, b) => a.variableName.localeCompare(b.variableName));
+        }
+        
+        // Add display ID (sequential numbering starting from 1)
+        return filtered.map((point, index) => ({
+            ...point,
+            displayId: index + 1
+        }));
+    }, [dataPoints, localChartGroupFilter]);
+
+    // Get unique chart groups for the dropdown
+    const chartGroups = useMemo(() => {
+        const groups = ['All', ...Object.values(ChartGroup)];
+        return groups;
+    }, []);
+
     const handleLoadQuery = () => {
-        const id = parseInt(metricId, 10);
-        if (isNaN(id)) {
+        const displayId = parseInt(metricId, 10);
+        if (isNaN(displayId)) {
             setError("Please enter a valid numeric ID.");
             return;
         }
         setError(null);
-        const dataPoint = dataPoints.find(dp => dp.id === id);
-        if (dataPoint) {
-            setQuery(dataPoint.productionSqlExpression);
-            setServer(dataPoint.serverName);
-            setLoadedMetricId(id);
-            setFeedbackMessage(`Loaded SQL and server (${dataPoint.serverName}) for metric ID: ${id}`);
+        
+        // Find the data point by display ID (1-based index)
+        const dataPointWithDisplayId = filteredAndSortedDataPoints.find(dp => dp.displayId === displayId);
+        if (dataPointWithDisplayId) {
+            setQuery(dataPointWithDisplayId.productionSqlExpression);
+            setServer(dataPointWithDisplayId.serverName);
+            setLoadedMetricId(dataPointWithDisplayId.id); // Store the actual database ID
+            setFeedbackMessage(`Loaded SQL and server (${dataPointWithDisplayId.serverName}) for display ID: ${displayId} (${dataPointWithDisplayId.variableName})`);
         } else {
-            setError(`Metric with ID ${id} not found.`);
+            setError(`Metric with display ID ${displayId} not found in current filter view.`);
             setLoadedMetricId(null);
         }
     };
@@ -55,12 +94,26 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
             return;
         }
         try {
+            // Update the SQL expression
             updateDataPoint(loadedMetricId, 'productionSqlExpression', query);
-            setFeedbackMessage(`Successfully saved SQL expression for metric ID: ${loadedMetricId}.`);
+            
+            // Update the lastUpdated timestamp to track when the SQL was modified
+            updateDataPoint(loadedMetricId, 'lastUpdated', new Date().toISOString());
+            
+            // Find the data point to get its variable name for feedback
+            const dataPoint = filteredAndSortedDataPoints.find(dp => dp.id === loadedMetricId);
+            const variableName = dataPoint ? dataPoint.variableName : `ID ${loadedMetricId}`;
+            
+            setFeedbackMessage(`Successfully saved SQL expression for ${variableName}. Changes will be included in backups and persist in the admin list.`);
             setError(null);
+            
+            console.log(`[SQL Query Tool] Saved SQL expression for metric ID ${loadedMetricId}: ${variableName}`);
+            console.log(`[SQL Query Tool] SQL: ${query}`);
+            
         } catch(e) {
              const message = e instanceof Error ? e.message : "An unknown error occurred during save.";
              setError(message);
+             console.error(`[SQL Query Tool] Error saving SQL for metric ID ${loadedMetricId}:`, e);
         }
     };
 
@@ -100,11 +153,32 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
                 Directly query the database engine. You are currently in <span className="font-bold text-text-primary">{mode.toUpperCase()}</span> mode.
                 Select the target server to ensure correct SQL dialect is used.
                 Try querying a sandboxed table like <code className="bg-secondary px-1 rounded">mcp_sandboxed_inv</code> to see the simulated error response.
+                <br />
+                <strong>Note:</strong> The ID numbers correspond to the display order in the Admin table based on your current filter selection.
             </p>
 
             <div className="mb-4 p-4 bg-secondary rounded-lg">
+                <label htmlFor="chart-group-filter" className="block text-sm font-medium text-text-secondary mb-2">
+                    Filter by Chart Group (affects ID numbering)
+                </label>
+                <select
+                    id="chart-group-filter"
+                    value={localChartGroupFilter}
+                    onChange={(e) => setLocalChartGroupFilter(e.target.value)}
+                    className="w-full bg-primary p-2 rounded border border-transparent focus:border-accent focus:ring-0 text-sm"
+                >
+                    {chartGroups.map(group => (
+                        <option key={group} value={group}>{group}</option>
+                    ))}
+                </select>
+                <p className="text-xs text-text-secondary mt-1">
+                    Showing {filteredAndSortedDataPoints.length} records. IDs are renumbered 1-{filteredAndSortedDataPoints.length} based on this filter.
+                </p>
+            </div>
+
+            <div className="mb-4 p-4 bg-secondary rounded-lg">
                 <label htmlFor="metric-id" className="block text-sm font-medium text-text-secondary mb-2">
-                    Load SQL by Metric ID
+                    Load SQL by Display ID
                 </label>
                 <div className="flex items-center space-x-2">
                     <input
@@ -114,6 +188,8 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
                         onChange={(e) => setMetricId(e.target.value)}
                         className="w-32 bg-primary p-2 rounded border border-transparent focus:border-accent focus:ring-0 text-sm"
                         placeholder="Enter ID..."
+                        min="1"
+                        max={filteredAndSortedDataPoints.length}
                     />
                     <button
                         onClick={handleLoadQuery}

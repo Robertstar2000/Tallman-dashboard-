@@ -24,8 +24,8 @@ const getKpiDetails = (variableName: string): { color: string; icon: KpiIconName
 
 
 const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
-    const { mode } = useGlobal();
-    console.log(`[Dashboard] Rendering with ${dataPoints.length} dataPoints in ${mode} mode.`);
+    const { mode, selectedChartGroup } = useGlobal();
+    console.log(`[Dashboard] Rendering with ${dataPoints.length} dataPoints in ${mode} mode, filtered by: ${selectedChartGroup}`);
 
     // Add a check for dataPoints not being an array, as a final safeguard.
     if (!Array.isArray(dataPoints)) {
@@ -35,13 +35,17 @@ const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
     
     // Helper function to get the appropriate value based on current mode
     const getDisplayValue = (dp: DashboardDataPoint): number => {
+        let result;
         if (mode === 'production') {
             // In production mode, use prodValue if available, otherwise fall back to value
-            return typeof dp.prodValue === 'number' ? dp.prodValue : (typeof dp.value === 'number' ? dp.value : 0);
+            result = typeof dp.prodValue === 'number' ? dp.prodValue : (typeof dp.value === 'number' ? dp.value : 0);
+            console.log(`[getDisplayValue] PRODUCTION MODE - ${dp.variableName}: prodValue=${dp.prodValue}, value=${dp.value}, using=${result}`);
         } else {
             // In demo mode, use the static value field
-            return typeof dp.value === 'number' ? dp.value : 0;
+            result = typeof dp.value === 'number' ? dp.value : 0;
+            console.log(`[getDisplayValue] DEMO MODE - ${dp.variableName}: value=${dp.value}, using=${result}`);
         }
+        return result;
     };
     
     // Transform data points to use appropriate values based on mode
@@ -51,9 +55,25 @@ const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
     }));
     
     const keyMetrics = transformedDataPoints.filter(dp => KEY_METRICS_VARS.includes(dp.variableName));
-    const chartDataPoints = transformedDataPoints.filter(dp => !KEY_METRICS_VARS.includes(dp.variableName));
-    console.log(`[Dashboard] Filtered into ${keyMetrics.length} key metrics and ${chartDataPoints.length} chart data points.`);
+    let chartDataPoints = transformedDataPoints.filter(dp => !KEY_METRICS_VARS.includes(dp.variableName));
+    
+    // Apply chart group filtering
+    if (selectedChartGroup !== 'All') {
+        chartDataPoints = chartDataPoints.filter(dp => dp.chartGroup === selectedChartGroup);
+    }
+    
+    console.log(`[Dashboard] Filtered into ${keyMetrics.length} key metrics and ${chartDataPoints.length} chart data points (filter: ${selectedChartGroup}).`);
 
+    // Debug: Log site distribution specific data
+    const siteDistributionData = chartDataPoints.filter(dp => dp.chartGroup === 'Site Distribution');
+    console.log(`[Dashboard] Site Distribution data (${siteDistributionData.length} points):`, siteDistributionData.map(dp => ({
+        id: dp.id,
+        variableName: dp.variableName,
+        dataPoint: dp.dataPoint,
+        value: dp.value,
+        prodValue: dp.prodValue,
+        mode: mode
+    })));
 
     const chartOrder: ChartGroup[] = [
         ChartGroup.ACCOUNTS, ChartGroup.CUSTOMER_METRICS, ChartGroup.HISTORICAL_DATA,
@@ -69,7 +89,7 @@ const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
         (acc[dp.chartGroup] = acc[dp.chartGroup] || []).push(dp);
         return acc;
     }, {} as Record<ChartGroup, DashboardDataPoint[]>);
-    console.log('[Dashboard] Grouped chart data:', groupedCharts);
+    console.log(`[Dashboard] Grouped chart data (filter: ${selectedChartGroup}):`, groupedCharts);
 
     return (
         <div className="space-y-6">
@@ -99,8 +119,8 @@ const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
                 {/* Charts Grid */}
                 <div className="lg:col-span-5 xl:col-span-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                    {chartOrder.map(group => {
-                       console.log(`[Dashboard] Checking for chart group: ${group}`);
-                       if (groupedCharts[group]) {
+                       console.log(`[Dashboard] Checking for chart group: ${group} (filter: ${selectedChartGroup})`);
+                       if (groupedCharts[group] && groupedCharts[group].length > 0) {
                            console.log(`[Dashboard] Rendering chart for ${group} with ${groupedCharts[group].length} data points.`);
                            return <ChartCard key={group} title={group} data={groupedCharts[group]} />
                        }
