@@ -97,7 +97,8 @@ TableRow.displayName = 'TableRow';
 
 interface AdminProps {
     dataPoints: DashboardDataPoint[];
-    updateDataPoint: (id: number, field: keyof DashboardDataPoint, value: string) => void;
+    // Pass optional chartGroup and variableName to ensure unique-identifier matching (avoid ID-only collisions)
+    updateDataPoint: (id: number, field: keyof DashboardDataPoint, value: string, chartGroup?: string, variableName?: string) => void;
     runDemoWorker: () => void;
     stopDemoWorker: () => void;
     testDbConnections: () => Promise<ConnectionDetails[]>;
@@ -135,8 +136,10 @@ const Admin: React.FC<AdminProps> = ({
     };
 
     const handleInputChange = useCallback((id: number, field: keyof DashboardDataPoint, value: any) => {
-        updateDataPoint(id, field, String(value));
-    }, [updateDataPoint]);
+        // Look up the row by id to fetch chartGroup and variableName for unique-identifier matching
+        const dp = dataPoints.find(dp => dp.id === id);
+        updateDataPoint(id, field, String(value), dp?.chartGroup, dp?.variableName);
+    }, [dataPoints, updateDataPoint]);
 
     const handleSaveRow = useCallback(async (id: number) => {
         setSavingRows(prev => new Set(prev).add(id));
@@ -148,8 +151,9 @@ const Admin: React.FC<AdminProps> = ({
                 throw new Error('Data point not found');
             }
 
-            // Update the lastUpdated timestamp
-            updateDataPoint(id, 'lastUpdated', new Date().toISOString());
+            // Update the lastUpdated timestamp with unique-identifier matching to avoid cross-contamination
+            const dp = dataPoints.find(dp => dp.id === id);
+            updateDataPoint(id, 'lastUpdated', new Date().toISOString(), dp?.chartGroup, dp?.variableName);
             
             // Simulate save delay for user feedback
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -409,9 +413,9 @@ const Admin: React.FC<AdminProps> = ({
         }));
     }, [dataPoints, selectedChartGroup]);
 
-    // Get unique chart groups for the dropdown
+    // Get unique chart groups for the dropdown (match Header component behavior)
     const chartGroups = useMemo(() => {
-        const groups = ['All', ...Object.values(ChartGroup)];
+        const groups = ['All', ...Object.values(ChartGroup).filter(group => group !== ChartGroup.KEY_METRICS)];
         return groups;
     }, []);
 
@@ -533,14 +537,14 @@ const Admin: React.FC<AdminProps> = ({
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        console.log('Force executing Inventory queries...');
-                                        alert('Starting force execution of Inventory queries. Check console for progress.');
-                                        await forceExecuteChartGroup('Inventory');
-                                        alert('Completed Inventory execution.');
+                                        console.log('Force executing Service queries...');
+                                        alert('Starting force execution of Service queries. Check console for progress.');
+                                        await forceExecuteChartGroup('Service');
+                                        alert('Completed Service execution.');
                                     }}
                                     className="px-3 py-2 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700"
                                 >
-                                    Force: Inventory
+                                    Force: Service
                                 </button>
                                 <button
                                     onClick={async () => {

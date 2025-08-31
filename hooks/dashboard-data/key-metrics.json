@@ -54,7 +54,7 @@
         "dataPoint": "Daily Revenue",
         "serverName": "P21",
         "tableName": "invoice_hdr",
-        "productionSqlExpression": "SELECT SUM(total_amount) AS result FROM invoice_hdr WHERE CAST(invoice_date AS DATE) = CAST(GETDATE() AS DATE);",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT h.po_no) AS open_pos_dminus6 FROM po_hdr AS h JOIN po_line AS l ON l.po_no = h.po_no WHERE h.order_date >= CONVERT(date, DATEADD(day, -0, GETDATE())) AND h.order_date <  CONVERT(date, DATEADD(day, 1, GETDATE())) AND (COALESCE(l.qty_ordered,0) - COALESCE(l.qty_received,0)) > 0;",
         "value": 134945,
         "prodValue": null,
         "calculationType": "Aggregate today's total invoiced currency.",
@@ -110,5 +110,21 @@
         "valueColumn": "total_amount",
         "filterColumn": "month",
         "filterValue": "Current Month"
+    },
+    {
+        "id": 8,
+        "chartGroup": "Key Metrics",
+        "variableName": "Key Metrics Total Inventory",
+        "dataPoint": "Total Inventory",
+        "serverName": "P21",
+        "tableName": "invoice_hdr",
+        "productionSqlExpression": "SELECT SUM(COALESCE(il.qty_on_hand, 0) * COALESCE(il.moving_average_cost, il.standard_cost, 0)) AS total_inventory_value FROM inv_loc il;",
+        "value": 7749837,
+        "prodValue": null,
+        "calculationType": "Aggregate current month total sales.",
+        "lastUpdated": "2024-08-01T00:00:00.000Z",
+        "valueColumn": "totaTotal Inventory",
+        "filterColumn": "24 montha",
+        "filterValue": "Current"
     }
 ]

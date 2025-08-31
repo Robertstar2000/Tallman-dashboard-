@@ -43,10 +43,19 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
     try {
         console.log(`[ChartCard - renderChart] Rendering chart for "${title}"`);
         
-        // Filter out offline data points
-        const onlineData = data.filter(dp => dp.value !== 99999);
-        
-        // If no data is available after filtering, show a message.
+                        // Use ALL historical data including those with errors for proper month processing
+        const onlineData = data; // Don't filter out error values initially
+
+        console.log(`[ChartCard - Historical Data] Input data (${onlineData.length} points):`, onlineData.map(dp => ({
+            id: dp.id,
+            variableName: dp.variableName,
+            serverName: dp.serverName,
+            filterValue: dp.filterValue,
+            value: dp.value,
+            prodValue: dp.prodValue
+        })));
+
+        // Check for data availability after processing
         if (onlineData.length === 0) {
              return (
                 <div className="flex items-center justify-center h-full text-text-secondary">
@@ -152,56 +161,82 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 );
 
             case ChartGroup.HISTORICAL_DATA:
-                // Handle historical data specially - it has both P21 and POR activities in different dataPoint formats
-                console.log(`[ChartCard - Historical Data] Processing ${onlineData.length} historical data points:`, onlineData);
+                // Handle historical data specially - it has both P21 and POR activities with 12 months x 2 variables = 24 data points
+                console.log(`[ChartCard - Historical Data] Processing ${data.length} historical data points (before filtering):`, data);
 
-                // Group by month and server for historical data
-                const historicalGroupedData = onlineData.reduce((acc, dp) => {
-                    if (!dp || !dp.dataPoint || !dp.filterValue) {
+                // Use all data points including those with 99999 values (errors)
+                const allHistoricalData = data.map(dp => ({
+                    ...dp,
+                    value: typeof dp.prodValue === 'number' && !isNaN(dp.prodValue) && dp.prodValue !== null && dp.prodValue !== undefined
+                        ? dp.prodValue
+                        : (typeof dp.value === 'number' ? dp.value : 0)
+                }));
+
+                console.log(`[ChartCard - Historical Data] Processing ${allHistoricalData.length} historical data points:`, allHistoricalData.map(dp => ({
+                    id: dp.id,
+                    serverName: dp.serverName,
+                    filterValue: dp.filterValue,
+                    value: dp.value,
+                    variableName: dp.variableName
+                })));
+
+                // Group by month offset and create a combined data structure
+                const historicalGroupedData: Record<string, any> = {};
+
+                allHistoricalData.forEach(dp => {
+                    if (!dp || !dp.filterValue) {
                         console.warn(`[ChartCard - Historical Data] Invalid historical data point:`, dp);
-                        return acc;
+                        return;
                     }
 
-                    const serverName = dp.serverName === 'P21' ? 'P21 Activities' :
-                                      dp.serverName === 'POR' ? 'POR Activities' : 'Other Activities';
+                    const filterValue = dp.filterValue as string;
+                    const offsetMatch = filterValue.match(/current_month-?(\d+)?$/);
 
-                    const monthOffset = dp.filterValue as string;
-                    const offsetMatch = monthOffset.match(/current_month-(\d+)/);
+                    if (!offsetMatch) {
+                        console.warn(`[ChartCard - Historical Data] Invalid filterValue format: ${filterValue}`);
+                        return;
+                    }
 
-                    if (!offsetMatch) return acc;
-
-                    const offset = parseInt(offsetMatch[1], 10);
+                    const offset = offsetMatch[1] ? parseInt(offsetMatch[1], 10) : 0;
                     const date = new Date();
                     date.setMonth(date.getMonth() - offset);
 
+                    // Create a unique key for each month
                     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                     const displayName = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
 
-                    if (!acc[monthKey]) {
-                        acc[monthKey] = { name: displayName, displayName, monthKey };
+                    if (!historicalGroupedData[monthKey]) {
+                        historicalGroupedData[monthKey] = {
+                            name: displayName,
+                            displayName,
+                            monthKey,
+                            'P21 System Activities': 0,
+                            'POR Rental Activities': 0
+                        };
                     }
 
-                    // Set the value based on server type
+                    // Ensure we have distinct values per server type
                     if (dp.serverName === 'P21') {
-                        acc[monthKey]['P21 Activities'] = Number(dp.value) || 0;
+                        historicalGroupedData[monthKey]['P21 System Activities'] = Number(dp.value) || 0;
+                        console.log(`[ChartCard - Historical Data] Adding P21 ${displayName} (${monthKey}): ${dp.value}`);
                     } else if (dp.serverName === 'POR') {
-                        acc[monthKey]['POR Activities'] = Number(dp.value) || 0;
+                        historicalGroupedData[monthKey]['POR Rental Activities'] = Number(dp.value) || 0;
+                        console.log(`[ChartCard - Historical Data] Adding POR ${displayName} (${monthKey}): ${dp.value}`);
                     }
-
-                    return acc;
-                }, {} as Record<string, any>);
+                });
 
                 chartData = Object.values(historicalGroupedData)
-                    .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+                    .sort((a, b) => a.monthKey.localeCompare(b.monthKey)); // Sort chronologically
 
-                console.log(`[ChartCard - Historical Data] Transformed historical data (${chartData.length} entries):`, chartData);
+                console.log(`[ChartCard - Historical Data] Final grouped data (${chartData.length} entries):`, chartData);
+                console.log(`[ChartCard - Historical Data] Expected 12 entries, got ${chartData.length}`);
 
                 if (chartData.length === 0) {
                     console.warn(`[ChartCard - Historical Data] No valid data after processing, showing fallback message`);
                     return (
                         <div className="flex items-center justify-center h-full text-text-secondary">
                             <p>No historical data available</p>
-                            <p className="text-xs mt-2">Check console for debug info</p>
+                            <p className="text-xs mt-2">Please check console for debug info</p>
                         </div>
                     );
                 }
@@ -211,11 +246,12 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                         <ComposedChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
-                            <YAxis fontSize={12} tickFormatter={(value) => value.toLocaleString()} />
+                            <YAxis yAxisId="left" orientation="left" fontSize={12} tickFormatter={(value) => value.toLocaleString()} />
+                            <YAxis yAxisId="right" orientation="right" fontSize={12} tickFormatter={(value) => `$${value / 10000}k`} />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />
-                            <Bar dataKey="P21 Activities" fill="#0088FE" name="P21 System Activities" />
-                            <Line type="monotone" dataKey="POR Activities" stroke="#00C49F" strokeWidth={2} name="POR Rental Activities" />
+                            <Bar yAxisId="left" dataKey="P21 System Activities" fill="#0088FE" name="P21 System Activities (Sales Volume)" />
+                            <Line yAxisId="right" type="monotone" dataKey="POR Rental Activities" stroke="#00C49F" strokeWidth={3} name="POR Rental Revenue (Value)" />
                         </ComposedChart>
                     </ResponsiveContainer>
                 );
@@ -241,18 +277,74 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 )
 
             case ChartGroup.POR_OVERVIEW:
-                 chartData = transformData(['New Rentals', 'Open Rentals', 'Rental Value'], 'month', onlineData);
+                 console.log('[ChartCard - POR Overview] Input data:', onlineData.map(dp => ({
+                     dataPoint: dp.dataPoint,
+                     value: dp.value,
+                     prodValue: dp.prodValue,
+                     filterValue: dp.filterValue,
+                     variableName: dp.variableName
+                 })));
+
+                 chartData = onlineData.map(dp => {
+                     if (!dp.filterValue || typeof dp.filterValue !== 'string') {
+                         console.log(`[ChartCard - POR Overview] Skipping invalid filterValue: ${dp.filterValue}`);
+                         return null;
+                     }
+                     const monthMatch = dp.filterValue.match(/current_month(?:-(\d+))?/);
+                     if (!monthMatch) {
+                         console.log(`[ChartCard - POR Overview] Skipping invalid month format: ${dp.filterValue}`);
+                         return null;
+                     }
+
+                     const monthOffset = monthMatch[1] ? parseInt(monthMatch[1], 10) : 0;
+                     const date = new Date();
+                     date.setMonth(date.getMonth() - monthOffset);
+
+                     const monthName = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+
+                     // Use the already-transformed value from Dashboard.tsx (which respects the mode)
+                     const displayValue = dp.value;
+
+                     console.log(`[ChartCard POR Debug] Processing: ${dp.variableName} (${dp.dataPoint}) - prodValue: ${dp.prodValue}, transformed value: ${dp.value}, final displayValue: ${displayValue}`);
+
+                     const result = {
+                         name: monthName,
+                         'Rentals Count': dp.dataPoint === 'rentals_count' ? Number(displayValue) || 0 : 0,
+                         'Rental Value': dp.dataPoint === 'rental_value' ? Number(displayValue) || 0 : 0
+                     };
+
+                     console.log(`[ChartCard - POR Overview] Created result for ${monthName} (${dp.dataPoint}):`, result);
+
+                     return result;
+                 }).filter((item): item is NonNullable<typeof item> => item !== null);
+
+                 // Merge data points for the same month
+                 const mergedData = chartData.reduce((acc, item) => {
+                     if (!acc[item.name]) {
+                         acc[item.name] = { ...item };
+                     } else {
+                         acc[item.name]['Rentals Count'] += item['Rentals Count'];
+                         acc[item.name]['Rental Value'] += item['Rental Value'];
+                     }
+                     return acc;
+                 }, {} as Record<string, any>);
+
+                 console.log('[ChartCard - POR Overview] Chart data before filtering:', chartData);
+                 console.log('[ChartCard - POR Overview] Merged data:', Object.values(mergedData));
+                 const finalChartData = Object.values(mergedData);
+                 console.log('[ChartCard - POR Overview] Final chart data being passed to BarChart:', finalChartData);
+
                  return (
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <BarChart data={Object.values(mergedData)} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.3} />
                             <XAxis dataKey="name" fontSize={12} />
-                            <YAxis fontSize={12} />
-                            <Tooltip content={<CustomTooltip />} />
+                            <YAxis yAxisId="count" orientation="left" fontSize={12} />
+                            <YAxis yAxisId="value" orientation="right" fontSize={12} tickFormatter={(value) => `$${value / 1000000}M`} />
+                            <Tooltip content={<CustomTooltip />} formatter={(value: number) => value.toLocaleString()} />
                             <Legend />
-                            <Bar dataKey="New Rentals" fill="#413ea0" />
-                            <Bar dataKey="Open Rentals" fill="#82ca9d" />
-                            <Bar dataKey="Rental Value" fill="#ff7300" />
+                            <Bar yAxisId="count" dataKey="Rentals Count" fill="#413ea0" name="Rentals Count" />
+                            <Bar yAxisId="value" dataKey="Rental Value" fill="#ff7300" name="Rental Value" />
                         </BarChart>
                     </ResponsiveContainer>
                 );

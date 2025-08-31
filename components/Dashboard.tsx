@@ -19,6 +19,7 @@ const getKpiDetails = (variableName: string): { color: string; icon: KpiIconName
     if (variableName.includes('Open Invoices')) return { color: 'bg-kpi-pink', icon: 'OpenInvoices' };
     if (variableName.includes('OrdersBackloged')) return { color: 'bg-kpi-red', icon: 'OrdersBacklogged' };
     if (variableName.includes('Total Sales Monthly')) return { color: 'bg-kpi-orange', icon: 'TotalSalesMonthly' };
+    if (variableName.includes('Total Inventory')) return { color: 'bg-purple-700', icon: 'TotalInventory' };
     return { color: 'bg-gray-500', icon: 'TotalOrders' };
 };
 
@@ -37,9 +38,14 @@ const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
     const getDisplayValue = (dp: DashboardDataPoint): number => {
         let result;
         if (mode === 'production') {
-            // In production mode, use prodValue if available, otherwise fall back to value
-            result = typeof dp.prodValue === 'number' ? dp.prodValue : (typeof dp.value === 'number' ? dp.value : 0);
-            console.log(`[getDisplayValue] PRODUCTION MODE - ${dp.variableName}: prodValue=${dp.prodValue}, value=${dp.value}, using=${result}`);
+            // In production mode, use prodValue if available, otherwise fall back to demo value
+            if (typeof dp.prodValue === 'number' && !isNaN(dp.prodValue) && dp.prodValue !== null) {
+                result = dp.prodValue;
+                console.log(`[getDisplayValue] PRODUCTION MODE - ${dp.variableName}: Using prodValue=${dp.prodValue}`);
+            } else {
+                result = typeof dp.value === 'number' ? dp.value : 0;
+                console.log(`[getDisplayValue] PRODUCTION MODE - ${dp.variableName}: prodValue not available (${dp.prodValue}), using demo value=${result}`);
+            }
         } else {
             // In demo mode, use the static value field
             result = typeof dp.value === 'number' ? dp.value : 0;
@@ -56,12 +62,26 @@ const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
     
     const keyMetrics = transformedDataPoints.filter(dp => KEY_METRICS_VARS.includes(dp.variableName));
     let chartDataPoints = transformedDataPoints.filter(dp => !KEY_METRICS_VARS.includes(dp.variableName));
-    
+
+    // Debugging: Log all data points and key metrics filtering
+    console.log(`[Dashboard] 📋 All data points (${dataPoints.length}):`, dataPoints.map(dp => ({
+        id: dp.id,
+        variableName: dp.variableName,
+        chartGroup: dp.chartGroup
+    })));
+    console.log(`[Dashboard] 🎯 KEY_METRICS_VARS array (${KEY_METRICS_VARS.length}):`, KEY_METRICS_VARS);
+    console.log(`[Dashboard] ✅ Filtered key metrics (${keyMetrics.length}):`, keyMetrics.map(dp => ({
+        id: dp.id,
+        variableName: dp.variableName,
+        chartGroup: dp.chartGroup
+    })));
+    console.log(`[Dashboard] 📊 Checking if "Total Inventory" is in key metrics:`, keyMetrics.some(km => km.variableName === 'Key Metrics Total Inventory'));
+
     // Apply chart group filtering
     if (selectedChartGroup !== 'All') {
         chartDataPoints = chartDataPoints.filter(dp => dp.chartGroup === selectedChartGroup);
     }
-    
+
     console.log(`[Dashboard] Filtered into ${keyMetrics.length} key metrics and ${chartDataPoints.length} chart data points (filter: ${selectedChartGroup}).`);
 
     // Debug: Log site distribution specific data
@@ -77,7 +97,7 @@ const Dashboard: React.FC<DashboardProps> = ({ dataPoints }) => {
 
     const chartOrder: ChartGroup[] = [
         ChartGroup.ACCOUNTS, ChartGroup.CUSTOMER_METRICS, ChartGroup.HISTORICAL_DATA,
-        ChartGroup.INVENTORY, ChartGroup.POR_OVERVIEW, ChartGroup.SITE_DISTRIBUTION,
+        ChartGroup.INVENTORY, ChartGroup.SERVICE, ChartGroup.POR_OVERVIEW, ChartGroup.SITE_DISTRIBUTION,
         ChartGroup.DAILY_ORDERS, ChartGroup.WEB_ORDERS, ChartGroup.AR_AGING
     ];
 

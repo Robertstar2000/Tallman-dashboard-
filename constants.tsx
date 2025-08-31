@@ -9,7 +9,8 @@ export const KEY_METRICS_VARS: string[] = [
     'Key Metrics Daily Revenue Overview',
     'Key Metrics Open Invoices Overview',
     'Key Metrics OrdersBackloged Overview',
-    'Key Metrics Total Sales Monthly Overview'
+    'Key Metrics Total Sales Monthly Overview',
+    'Key Metrics Total Inventory'
 ];
 
 export const ChartIcon = () => (

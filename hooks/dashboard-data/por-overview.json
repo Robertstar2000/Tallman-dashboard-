@@ -6,13 +6,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -11, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -10, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month11 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -11, GETDATE())), MONTH(DATEADD(month, -11, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -10, GETDATE())), MONTH(DATEADD(month, -10, GETDATE())), 1 );",
         "value": 245,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-11"
+        "filterValue": "current_month-11",
+        "prodValue": null
     },
     {
         "id": 2,
@@ -21,13 +22,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -11, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -10, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month11 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -11, GETDATE())), MONTH(DATEADD(month, -11, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -10, GETDATE())), MONTH(DATEADD(month, -10, GETDATE())),  1 );",
         "value": 125000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-11"
+        "filterValue": "current_month-11",
+        "prodValue": null
     },
     {
         "id": 3,
@@ -36,13 +38,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -10, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -9, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month10 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -10, GETDATE())), MONTH(DATEADD(month, -10, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -9, GETDATE())), MONTH(DATEADD(month, -9, GETDATE())), 1 );",
         "value": 268,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-10"
+        "filterValue": "current_month-10",
+        "prodValue": null
     },
     {
         "id": 4,
@@ -51,13 +54,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -10, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -9, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month10 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -10, GETDATE())), MONTH(DATEADD(month, -10, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -9, GETDATE())), MONTH(DATEADD(month, -9, GETDATE())),  1 );",
         "value": 138000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-10"
+        "filterValue": "current_month-10",
+        "prodValue": null
     },
     {
         "id": 5,
@@ -66,13 +70,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -9, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -8, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month9 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -9, GETDATE())), MONTH(DATEADD(month, -9, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -8, GETDATE())), MONTH(DATEADD(month, -8, GETDATE())), 1 );",
         "value": 221,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-9"
+        "filterValue": "current_month-9",
+        "prodValue": null
     },
     {
         "id": 6,
@@ -81,13 +86,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -9, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -8, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month9 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -9, GETDATE())), MONTH(DATEADD(month, -9, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -8, GETDATE())), MONTH(DATEADD(month, -8, GETDATE())),  1 );",
         "value": 115000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-9"
+        "filterValue": "current_month-9",
+        "prodValue": null
     },
     {
         "id": 7,
@@ -96,13 +102,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -8, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -7, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month8 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -8, GETDATE())), MONTH(DATEADD(month, -8, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -7, GETDATE())), MONTH(DATEADD(month, -7, GETDATE())), 1 );",
         "value": 289,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-8"
+        "filterValue": "current_month-8",
+        "prodValue": null
     },
     {
         "id": 8,
@@ -111,13 +118,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -8, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -7, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month8 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -8, GETDATE())), MONTH(DATEADD(month, -8, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -7, GETDATE())), MONTH(DATEADD(month, -7, GETDATE())),  1 );",
         "value": 152000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-8"
+        "filterValue": "current_month-8",
+        "prodValue": null
     },
     {
         "id": 9,
@@ -126,13 +134,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -7, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -6, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month7 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -7, GETDATE())), MONTH(DATEADD(month, -7, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -6, GETDATE())), MONTH(DATEADD(month, -6, GETDATE())), 1 );",
         "value": 312,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-7"
+        "filterValue": "current_month-7",
+        "prodValue": null
     },
     {
         "id": 10,
@@ -141,13 +150,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -7, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -6, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month7 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -7, GETDATE())), MONTH(DATEADD(month, -7, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -6, GETDATE())), MONTH(DATEADD(month, -6, GETDATE())),  1 );",
         "value": 168000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-7"
+        "filterValue": "current_month-7",
+        "prodValue": null
     },
     {
         "id": 11,
@@ -156,13 +166,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -6, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -5, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month6 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -6, GETDATE())), MONTH(DATEADD(month, -6, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -5, GETDATE())), MONTH(DATEADD(month, -5, GETDATE())), 1 );",
         "value": 334,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-6"
+        "filterValue": "current_month-6",
+        "prodValue": null
     },
     {
         "id": 12,
@@ -171,13 +182,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -6, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -5, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month6 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -6, GETDATE())), MONTH(DATEADD(month, -6, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -5, GETDATE())), MONTH(DATEADD(month, -5, GETDATE())),  1 );",
         "value": 185000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-6"
+        "filterValue": "current_month-6",
+        "prodValue": null
     },
     {
         "id": 13,
@@ -186,13 +198,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -5, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -4, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month5 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -5, GETDATE())), MONTH(DATEADD(month, -5, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -4, GETDATE())), MONTH(DATEADD(month, -4, GETDATE())), 1 );",
         "value": 378,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-5"
+        "filterValue": "current_month-5",
+        "prodValue": null
     },
     {
         "id": 14,
@@ -201,13 +214,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -5, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -4, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month5 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -5, GETDATE())), MONTH(DATEADD(month, -5, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -4, GETDATE())), MONTH(DATEADD(month, -4, GETDATE())),  1 );",
         "value": 203000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-5"
+        "filterValue": "current_month-5",
+        "prodValue": null
     },
     {
         "id": 15,
@@ -216,13 +230,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -4, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -3, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month4 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -4, GETDATE())), MONTH(DATEADD(month, -4, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -3, GETDATE())), MONTH(DATEADD(month, -3, GETDATE())), 1 );",
         "value": 425,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-4"
+        "filterValue": "current_month-4",
+        "prodValue": null
     },
     {
         "id": 16,
@@ -231,13 +246,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -4, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -3, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month4 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -4, GETDATE())), MONTH(DATEADD(month, -4, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -3, GETDATE())), MONTH(DATEADD(month, -3, GETDATE())),  1 );",
         "value": 225000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-4"
+        "filterValue": "current_month-4",
+        "prodValue": null
     },
     {
         "id": 17,
@@ -246,13 +262,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -3, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -2, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month3 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -3, GETDATE())), MONTH(DATEADD(month, -3, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -2, GETDATE())), MONTH(DATEADD(month, -2, GETDATE())), 1 );",
         "value": 467,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-3"
+        "filterValue": "current_month-3",
+        "prodValue": null
     },
     {
         "id": 18,
@@ -261,13 +278,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -3, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -2, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month3 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -3, GETDATE())), MONTH(DATEADD(month, -3, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -2, GETDATE())), MONTH(DATEADD(month, -2, GETDATE())),  1 );",
         "value": 248000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-3"
+        "filterValue": "current_month-3",
+        "prodValue": null
     },
     {
         "id": 19,
@@ -276,13 +294,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -2, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -1, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month2 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -2, GETDATE())), MONTH(DATEADD(month, -2, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, -1, GETDATE())), MONTH(DATEADD(month, -1, GETDATE())), 1 );",
         "value": 512,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-2"
+        "filterValue": "current_month-2",
+        "prodValue": null
     },
     {
         "id": 20,
@@ -291,13 +310,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -2, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, -1, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month2 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -2, GETDATE())), MONTH(DATEADD(month, -2, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, -1, GETDATE())), MONTH(DATEADD(month, -1, GETDATE())),  1 );",
         "value": 275000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-2"
+        "filterValue": "current_month-2",
+        "prodValue": null
     },
     {
         "id": 21,
@@ -306,13 +326,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -1, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, 0, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_Month1 FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, -1, GETDATE())), MONTH(DATEADD(month, -1, GETDATE())), 1 ) AND oh.order_date < DATEFROMPARTS( YEAR(DATEADD(month, 0, GETDATE())), MONTH(DATEADD(month, 0, GETDATE())), 1 );",
         "value": 589,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month-1"
+        "filterValue": "current_month-1",
+        "prodValue": null
     },
     {
         "id": 22,
@@ -321,13 +342,14 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date BETWEEN DATEADD(month, -1, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) AND DATEADD(month, 0, DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)) - 1;",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_Month1 FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -1, GETDATE())), MONTH(DATEADD(month, -1, GETDATE())), 1 ) AND ih.invoice_date < DATEFROMPARTS( YEAR(DATEADD(month, 0, GETDATE())), MONTH(DATEADD(month, 0, GETDATE())),  1 );",
         "value": 310000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month-1"
+        "filterValue": "current_month-1",
+        "prodValue": null
     },
     {
         "id": 23,
@@ -336,13 +358,14 @@
         "dataPoint": "rentals_count",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT COUNT(*) AS result FROM rental_contracts WHERE contract_date >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0);",
+        "productionSqlExpression": "SELECT COUNT(DISTINCT oh.order_no) AS NewRentalCount_CurrentMonth FROM oe_hdr oh WHERE oh.rental_billing_flag = 'U' AND oh.order_date >= DATEFROMPARTS( YEAR(DATEADD(month, 0, GETDATE())), MONTH(DATEADD(month, 0, GETDATE())), 1 );",
         "value": 634,
         "calculationType": "Count rental contracts for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rentals_count",
         "filterColumn": "month",
-        "filterValue": "current_month"
+        "filterValue": "current_month",
+        "prodValue": null
     },
     {
         "id": 24,
@@ -351,12 +374,13 @@
         "dataPoint": "rental_value",
         "serverName": "POR",
         "tableName": "rental_contracts",
-        "productionSqlExpression": "SELECT SUM(contract_value) AS result FROM rental_contracts WHERE contract_date >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0);",
+        "productionSqlExpression": "SELECT SUM(il.extended_price) AS RentalSales_CurrentMonth FROM oe_hdr oh JOIN invoice_line il ON il.order_no = oh.order_no JOIN invoice_hdr ih ON ih.invoice_no = il.invoice_no WHERE oh.rental_billing_flag = 'U' AND ih.invoice_date >= DATEFROMPARTS( YEAR(DATEADD(month, -0, GETDATE())), MONTH(DATEADD(month, -0, GETDATE())), 1 );",
         "value": 345000,
         "calculationType": "Sum rental contract values for the appropriate calendar month.",
         "lastUpdated": "2024-08-01T00:00:00.000Z",
         "valueColumn": "rental_value",
         "filterColumn": "month",
-        "filterValue": "current_month"
+        "filterValue": "current_month",
+        "prodValue": null
     }
 ]

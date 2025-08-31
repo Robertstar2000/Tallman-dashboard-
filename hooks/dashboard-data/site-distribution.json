@@ -38,7 +38,7 @@
         "dataPoint": "Lake City",
         "serverName": "P21",
         "tableName": "oe_hdr",
-        "productionSqlExpression": "SELECT LTRIM(RTRIM(h.ship2_city)) AS location, COUNT(DISTINCT h.order_no) AS total_orders FROM oe_hdr AS h WHERE h.ship2_city LIKE N'%LakeCity%' GROUP BY LTRIM(RTRIM(h.ship2_city)) ORDER BY total_orders DESC;",
+        "productionSqlExpression": "SELECT LTRIM(RTRIM(h.ship2_city)) AS location, COUNT(DISTINCT h.order_no) AS total_orders FROM oe_hdr AS h WHERE LTRIM(RTRIM(h.ship2_city)) = N'Lake City' GROUP BY LTRIM(RTRIM(h.ship2_city)) ORDER BY total_orders DESC;",
         "value": 1,
         "prodValue": null,
         "calculationType": "Count distinct orders shipped to the specified geographical location.",

@@ -42,6 +42,12 @@ export const TotalSalesMonthlyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (p
   </svg>
 );
 
+export const TotalInventoryIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v2.25m0 0l-3 3m3-3l3 3M6.945 7.846a26.93 26.93 0 0 1 1.114-2.02c.29-.65.947-1.089 1.689-1.089h7.07c.734 0 1.393.44 1.689 1.089 1.14 2.512 1.14 5.527 0 8.04-.296.642-.954 1.089-1.689 1.089H8.761c-.734 0-1.393-.44-1.689-1.089L6.946 7.846z" />
+  </svg>
+);
+
 export const SunIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
@@ -81,6 +87,7 @@ export const kpiIcons = {
     OpenInvoices: OpenInvoicesIcon,
     OrdersBacklogged: OrdersBackloggedIcon,
     TotalSalesMonthly: TotalSalesMonthlyIcon,
+    TotalInventory: TotalInventoryIcon,
 };
 
 export type KpiIconName = keyof typeof kpiIcons;

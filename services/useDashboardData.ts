@@ -5,6 +5,14 @@ import { generateSqlResponse, testConnections } from './geminiService';
 import * as mcpService from './mcpService';
 import { safeLocalStorage } from './storageService';
 
+// Format a Date to YYYY-MM-DD in LOCAL timezone (avoid UTC off-by-one issues)
+const formatDateYYYYMMDDLocal = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 // Pattern to detect site distribution queries that return multiple locations
 const SITE_DISTRIBUTION_PATTERN = /GROUP BY/i; // Simplified pattern to catch all GROUP BY queries
 
@@ -86,15 +94,24 @@ export const useDashboardData = () => {
     console.log(`[useDashboardData] Hook instance created: ${instanceIdRef.current}`);
 
     const workerIntervalRef = useRef<number | null>(null);
-    const metricUpdateIndexRef = useRef(0);
-    const chartGroupIndexRef = useRef(0);
-    const chartGroupLoopCountRef = useRef(0);
+    // Track completion status for each chart group
+    const chartGroupCountersRef = useRef<Record<string, number>>({});
+    const completedGroupsRef = useRef<Set<string>>(new Set());
+    const currentChartGroupRef = useRef<string | null>(null);
+    const currentMetricIndexRef = useRef(0);
+    const loopIterationRef = useRef(0);
     const lastUpdateTimestampRef = useRef<Record<number, number>>({});
     const activeUpdatesRef = useRef<Set<string>>(new Set());
     const isWorkerTickRunningRef = useRef(false);
 
     // Track failed queries for retry logic
     const failedQueriesRef = useRef<Record<string, { count: number; lastAttempt: number; error: string }>>({});
+
+    // Track active updates and prevent race conditions for each data point
+    const activeDataPointLocksRef = useRef<Set<string>>(new Set());
+
+    // Store historical values for data validation
+    const historicalValuesRef = useRef<Record<number, { value: number; timestamp: number }>>({});
 
     // Data validation and recovery function
     const validateAndRecoverData = useCallback((data: any): DashboardDataPoint[] => {
@@ -165,7 +182,7 @@ export const useDashboardData = () => {
                 'hooks/dashboard-data/ar-aging.json',
                 'hooks/dashboard-data/daily-orders.json',
                 'hooks/dashboard-data/web-orders.json',
-                'hooks/dashboard-data/inventory.json',
+                'hooks/dashboard-data/service.json',
                 'hooks/dashboard-data/site-distribution.json',
                 'hooks/dashboard-data/customer-metrics.json',
                 'hooks/dashboard-data/accounts.json',
@@ -173,14 +190,23 @@ export const useDashboardData = () => {
                 'hooks/dashboard-data/por-overview.json'
             ];
 
+            // Add cache-busting timestamp to force fresh data
+            const cacheBuster = `?t=${Date.now()}`;
+            console.log('[useDashboardData] Cache buster applied:', cacheBuster);
+
             // Load and combine all data files with individual error handling
             const allData: DashboardDataPoint[] = [];
             const loadErrors: string[] = [];
 
             for (const filePath of dataFiles) {
                 try {
-                    console.log(`[useDashboardData] Loading ${filePath}...`);
-                    const response = await fetch(filePath);
+                    console.log(`[useDashboardData] Loading ${filePath}${cacheBuster}...`);
+                    const response = await fetch(`${filePath}${cacheBuster}`, {
+                        cache: 'no-cache',
+                        headers: {
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
                     if (!response.ok) {
                         const errorMsg = `HTTP ${response.status} for ${filePath}`;
                         console.warn(`[useDashboardData] ${errorMsg}`);
@@ -204,6 +230,7 @@ export const useDashboardData = () => {
                     if (Array.isArray(fileData)) {
                         allData.push(...fileData);
                         console.log(`[useDashboardData] Loaded ${fileData.length} items from ${filePath}`);
+                        console.log(`[useDashboardData] Items from ${filePath}:`, fileData.map(d => ({ id: d.id, variableName: d.variableName })));
                     } else {
                         const errorMsg = `${filePath} does not contain an array`;
                         console.warn(`[useDashboardData] ${errorMsg}`);
@@ -245,29 +272,35 @@ export const useDashboardData = () => {
         }
     }, [validateAndRecoverData]);
 
-    // Production Mode Worker - Enhanced to ensure all queries are executed
+    // Production Mode Worker - Complete coverage with group and metric tracking
     const runProductionWorkerTick = useCallback(async () => {
         if (dataPoints.length === 0) return;
 
-        // Prevent multiple ticks from running simultaneously (but allow more parallel processing)
+        // Prevent multiple ticks from running simultaneously
         if (isWorkerTickRunningRef.current) {
             console.log(`[Prod Worker] ❌ SKIPPING TICK - Another tick is already running!`);
             setStatusMessage(`Processing data points... (${activeUpdatesRef.current.size} active)`);
             return;
         }
 
-        // Allow up to 3 concurrent queries to improve throughput while avoiding overload
-        const MAX_CONCURRENT_QUERIES = 3;
+        // Use strict single-query execution to ensure deterministic results
+        const MAX_CONCURRENT_QUERIES = 1;
         if (activeUpdatesRef.current.size >= MAX_CONCURRENT_QUERIES) {
             console.log(`[Prod Worker] ⏳ SKIPPING TICK - ${activeUpdatesRef.current.size}/${MAX_CONCURRENT_QUERIES} queries in progress`);
-            setStatusMessage(`Processing ${activeUpdatesRef.current.size}/3 concurrent queries...`);
+            setStatusMessage(`Processing query (sequential mode for consistency)...`);
             return;
         }
 
-        // Create deterministic ordering of chart groups
+        // CRITICAL FIX: Create a deterministic base date for this entire execution cycle
+        const executionBaseDate = new Date();
+        executionBaseDate.setSeconds(0, 0);
+
+        console.log(`[Prod Worker] 🔄 Starting tick with deterministic base date: ${executionBaseDate.toISOString()}`);
+
+        // Create deterministic ordering of chart groups - complete list
         const chartGroupOrder = [
             'Key Metrics',
-            'Site Distribution', // Move Site Distribution earlier for testing
+            'Site Distribution',
             'AR Aging',
             'Daily Orders',
             'Web Orders',
@@ -295,20 +328,39 @@ export const useDashboardData = () => {
         const availableChartGroups = chartGroupOrder.filter(group => groupedData[group]);
         if (availableChartGroups.length === 0) return;
 
-        // Get current chart group using deterministic ordering
-        const currentGroupIndex = chartGroupIndexRef.current % availableChartGroups.length;
-        const currentGroup = availableChartGroups[currentGroupIndex];
+        // Initialize tracking if not already done
+        if (!currentChartGroupRef.current) {
+            currentChartGroupRef.current = availableChartGroups[0];
+            currentMetricIndexRef.current = 0;
+            console.log(`[Prod Worker] Initialized tracking: group=${currentChartGroupRef.current}, metric_index=0`);
+        }
+
+        const currentGroup = currentChartGroupRef.current;
         const currentGroupData = groupedData[currentGroup];
 
-        // Get current metric within the group
-        const metricIndex = metricUpdateIndexRef.current % currentGroupData.length;
+        // Get the current metric to update
+        const metricIndex = currentMetricIndexRef.current;
         const metricToUpdate = currentGroupData[metricIndex];
 
         // Add null check to prevent critical error
         if (!metricToUpdate || !metricToUpdate.variableName) {
             console.error(`[Prod Worker] Invalid metric in group ${currentGroup} at index ${metricIndex}:`, metricToUpdate);
-            // Move to next metric in current group
-            metricUpdateIndexRef.current = (metricUpdateIndexRef.current + 1) % currentGroupData.length;
+            // Advance to next metric
+            if (currentMetricIndexRef.current + 1 < currentGroupData.length) {
+                currentMetricIndexRef.current += 1;
+            } else {
+                // Move to next group
+                const currentGroupIndex = availableChartGroups.indexOf(currentGroup);
+                const nextGroupIndex = (currentGroupIndex + 1) % availableChartGroups.length;
+                currentChartGroupRef.current = availableChartGroups[nextGroupIndex];
+                currentMetricIndexRef.current = 0;
+
+                // Check if we've completed a full loop
+                if (nextGroupIndex === 0 && currentGroupIndex === availableChartGroups.length - 1) {
+                    loopIterationRef.current += 1;
+                    console.log(`[Prod Worker] Completed full loop #${loopIterationRef.current} through all chart groups`);
+                }
+            }
             return;
         }
 
@@ -323,16 +375,35 @@ export const useDashboardData = () => {
         // Mark that a tick is now running
         isWorkerTickRunningRef.current = true;
         console.log(`[Prod Worker] ✅ STARTING TICK - Worker tick flag set to true`);
-        console.log(`[Prod Worker] 📊 Current state: metricIndex=${metricIndex}, chartGroupIndex=${currentGroupIndex}, loopCount=${chartGroupLoopCountRef.current}`);
+        console.log(`[Prod Worker] 📊 Current: Group "${currentGroup}" (${availableChartGroups.indexOf(currentGroup) + 1}/${availableChartGroups.length}), Metric ${metricIndex + 1}/${currentGroupData.length}, Loop #${loopIterationRef.current}`);
         console.log(`[Prod Worker] 🎯 Target: ${uniqueIdentifier} from ${targetServerName}`);
-        console.log(`[Prod Worker] 📋 Sequential order: ${availableChartGroups.join(' → ')}`);
-        console.log(`[Prod Worker] 📍 Current position: Group "${currentGroup}" (${currentGroupIndex + 1}/${availableChartGroups.length}), Metric ${metricIndex + 1}/${currentGroupData.length}`);
 
-        // Mark this data point as being updated using unique identifier
+        // Check if this data point is currently being updated (race condition prevention)
+        if (activeDataPointLocksRef.current.has(uniqueIdentifier)) {
+            console.log(`[Prod Worker] ⏳ SKIPPING - Data point ${uniqueIdentifier} is currently being updated by another query`);
+            // Advance to next
+            if (currentMetricIndexRef.current + 1 < currentGroupData.length) {
+                currentMetricIndexRef.current += 1;
+            } else {
+                // Move to next group
+                const currentGroupIndex = availableChartGroups.indexOf(currentGroup);
+                const nextGroupIndex = (currentGroupIndex + 1) % availableChartGroups.length;
+                currentChartGroupRef.current = availableChartGroups[nextGroupIndex];
+                currentMetricIndexRef.current = 0;
+
+                if (nextGroupIndex === 0 && currentGroupIndex === availableChartGroups.length - 1) {
+                    loopIterationRef.current += 1;
+                    console.log(`[Prod Worker] Completed full loop #${loopIterationRef.current} through all chart groups`);
+                }
+            }
+            return;
+        }
+
+        // Acquire lock for this data point
+        activeDataPointLocksRef.current.add(uniqueIdentifier);
         activeUpdatesRef.current.add(uniqueIdentifier);
 
-        const loopCount = chartGroupLoopCountRef.current + 1;
-        setStatusMessage(`[Prod Worker] Loop ${loopCount}/2 - Group: ${currentGroup} - Fetching: ${targetVariableName}...`);
+        setStatusMessage(`[Prod Worker] Loop ${loopIterationRef.current} - Group: ${currentGroup} - Fetching: ${targetVariableName} (${metricIndex + 1}/${currentGroupData.length})...`);
 
         if (targetServerName === ServerName.P21) setP21Status('testing');
         else if (targetServerName === ServerName.POR) setPorStatus('testing');
@@ -341,10 +412,18 @@ export const useDashboardData = () => {
         setIsMcpExecuting(true);
 
         try {
+            // CRITICAL FIX: Make SQL queries deterministic by replacing GETDATE() with execution base date
+            const deterministicSqlExpression = targetSqlExpression.replace(
+                /GETDATE\(\)/g,
+                `'${formatDateYYYYMMDDLocal(executionBaseDate)}'`
+            );
+            console.log(`[Prod Worker] Original SQL:`, targetSqlExpression);
+            console.log(`[Prod Worker] Deterministic SQL:`, deterministicSqlExpression);
+            console.log(`[Prod Worker] Using base date: ${executionBaseDate.toISOString()}`);
+
             // Check if this is a site distribution query that returns multiple locations
             const isSiteDistributionQuery = SITE_DISTRIBUTION_PATTERN.test(targetSqlExpression);
             console.log(`[Prod Worker] Query analysis: isSiteDistributionQuery=${isSiteDistributionQuery}, currentGroup=${targetChartGroup}`);
-            console.log(`[Prod Worker] Full SQL query:`, targetSqlExpression);
             console.log(`[Prod Worker] Server: ${targetServerName}, ChartGroup: ${targetChartGroup}`);
 
             let processedResults: Array<{ location: string; value: number }>;
@@ -352,10 +431,10 @@ export const useDashboardData = () => {
             let finalValue = 99999; // Default error value
 
             if (isSiteDistributionQuery && targetChartGroup === 'Site Distribution') {
-                // Handle site distribution aggregated query
+                // Handle site distribution aggregated query with deterministic date
                 console.log(`[Prod Worker] Using aggregated data fetch for ${targetVariableName}`);
                 const aggregatedResults = await mcpService.fetchAggregatedData(
-                    targetSqlExpression,
+                    deterministicSqlExpression,
                     targetServerName
                 );
 
@@ -366,23 +445,23 @@ export const useDashboardData = () => {
 
                 if (aggregatedResults.length > 0 && !aggregatedResults[0].error) {
                     processedResults = aggregatedResults;
-                    statusMsg = `[Prod Worker] Loop ${loopCount}/2 - Successfully updated ${aggregatedResults.length} locations for: ${targetVariableName}`;
+                    statusMsg = `[Prod Worker] Loop ${loopIterationRef.current} - Successfully updated ${aggregatedResults.length} locations for: ${targetVariableName}`;
                     if (targetServerName === ServerName.P21) setP21Status('connected');
                     else if (targetServerName === ServerName.POR) setPorStatus('connected');
                 } else {
                     // Error in aggregated results
                     const errorMsg = aggregatedResults[0]?.error || 'No aggregated data returned';
                     processedResults = [{ location: metricToUpdate.dataPoint, value: 99999 }];
-                    statusMsg = `[Prod Worker] Loop ${loopCount}/2 - Aggregated query error for ${targetVariableName}: ${errorMsg} (using 99999)`;
+                    statusMsg = `[Prod Worker] Loop ${loopIterationRef.current} - Aggregated query error for ${targetVariableName}: ${errorMsg} (using 99999)`;
                     console.warn(`[Prod Worker] Aggregated query error for ${targetVariableName}: ${errorMsg}. Using 99999 as error indicator.`);
                     if (targetServerName === ServerName.P21) setP21Status('connected');
                     else if (targetServerName === ServerName.POR) setPorStatus('connected');
                 }
             } else {
-                // Handle single metric query (existing logic)
+                // Handle single metric query with deterministic SQL
                 console.log(`[Prod Worker] Using single metric fetch for ${targetVariableName}`);
                 const { value, error } = await mcpService.fetchMetricData(
-                    targetSqlExpression,
+                    deterministicSqlExpression,
                     targetServerName
                 );
 
@@ -392,7 +471,7 @@ export const useDashboardData = () => {
                 if (error) {
                     // SQL error occurred - track failure and use 99999 as error indicator
                     finalValue = 99999;
-                    statusMsg = `[Prod Worker] Loop ${loopCount}/2 - SQL Error for ${targetVariableName}: ${error} (using 99999)`;
+                    statusMsg = `[Prod Worker] Loop ${loopIterationRef.current} - SQL Error for ${targetVariableName}: ${error} (using 99999)`;
                     console.warn(`[Prod Worker] SQL Error for ${targetVariableName}: ${error}. Using 99999 as error indicator.`);
                     // Track this failure for retry logic
                     trackFailedQuery(uniqueIdentifier, `SQL Error: ${error}`);
@@ -402,7 +481,7 @@ export const useDashboardData = () => {
                 } else if (value === null || value === undefined) {
                     // Null/undefined result - track failure and use 99999 as error indicator
                     finalValue = 99999;
-                    statusMsg = `[Prod Worker] Loop ${loopCount}/2 - Null result for ${targetVariableName} (using 99999)`;
+                    statusMsg = `[Prod Worker] Loop ${loopIterationRef.current} - Null result for ${targetVariableName} (using 99999)`;
                     console.warn(`[Prod Worker] Null/undefined result for ${targetVariableName}. Using 99999 as error indicator.`);
                     trackFailedQuery(uniqueIdentifier, 'Null/undefined result');
                     if (targetServerName === ServerName.P21) setP21Status('connected');
@@ -410,7 +489,7 @@ export const useDashboardData = () => {
                 } else if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) {
                     // Invalid number - track failure and use 99999 as error indicator
                     finalValue = 99999;
-                    statusMsg = `[Prod Worker] Loop ${loopCount}/2 - Invalid number for ${targetVariableName}: ${value} (using 99999)`;
+                    statusMsg = `[Prod Worker] Loop ${loopIterationRef.current} - Invalid number for ${targetVariableName}: ${value} (using 99999)`;
                     console.warn(`[Prod Worker] Invalid number for ${targetVariableName}: ${value}. Using 99999 as error indicator.`);
                     trackFailedQuery(uniqueIdentifier, `Invalid number: ${value}`);
                     if (targetServerName === ServerName.P21) setP21Status('connected');
@@ -418,7 +497,7 @@ export const useDashboardData = () => {
                 } else {
                     // Valid result (including 0) - clear any previous failure tracking
                     finalValue = value;
-                    statusMsg = `[Prod Worker] Loop ${loopCount}/2 - Successfully updated: ${targetVariableName} = ${value}`;
+                    statusMsg = `[Prod Worker] Loop ${loopIterationRef.current} - Successfully updated: ${targetVariableName} = ${value}`;
                     clearFailedQuery(uniqueIdentifier);
                     if (targetServerName === ServerName.P21) setP21Status('connected');
                     else if (targetServerName === ServerName.POR) setPorStatus('connected');
@@ -466,12 +545,40 @@ export const useDashboardData = () => {
                     });
 
                     if (pointIndex !== -1) {
-                        console.log(`[Prod Worker] Updating single metric ${uniqueIdentifier} with prodValue: ${finalValue}`);
+                        const currentValue = updatedPoints[pointIndex].prodValue;
+                        const historicalData = historicalValuesRef.current[targetId];
+
+                        // Validate against historical data (for data that should be stable)
+                        let validatedValue = finalValue;
+
+                        // Check if this is likely monthly data that shouldn't change drastically
+                        if (targetVariableName.includes('Total Sales Monthly') ||
+                            targetVariableName.includes('Total Inventory')) {
+
+                            if (historicalData && Math.abs(finalValue - historicalData.value) > Math.abs(historicalData.value) * 0.5) {
+                                // Value changed by more than 50% - likely error, keep previous value
+                                console.warn(`[Prod Worker] 🚫 LARGE SWING DETECTED for ${targetVariableName}: ${historicalData.value} → ${finalValue}. Keeping previous value.`);
+                                validatedValue = historicalData.value;
+                            }
+                        }
+
+                        if (validatedValue !== finalValue) {
+                            console.log(`[Prod Worker] 📊 Value validation result: ${finalValue} → ${validatedValue}`);
+                        }
+
+                        console.log(`[Prod Worker] Updating single metric ${uniqueIdentifier} with prodValue: ${validatedValue}`);
                         updatedPoints[pointIndex] = {
                             ...updatedPoints[pointIndex],
-                            prodValue: finalValue,
+                            prodValue: validatedValue,
                             lastUpdated: new Date().toISOString()
                         };
+
+                        // Update historical values for future validation
+                        historicalValuesRef.current[targetId] = {
+                            value: validatedValue,
+                            timestamp: Date.now()
+                        };
+
                         updateCount++;
                     }
                 }
@@ -520,33 +627,33 @@ export const useDashboardData = () => {
                 return updatedPoints;
             });
 
-            setStatusMessage(`[Prod Worker] Loop ${loopCount}/2 - Unexpected error for ${targetVariableName} (using 99999)`);
+            setStatusMessage(`[Prod Worker] Loop ${loopIterationRef.current}/2 - Unexpected error for ${targetVariableName} (using 99999)`);
             if (targetServerName === ServerName.P21) setP21Status('connected');
             else if (targetServerName === ServerName.POR) setPorStatus('connected');
         } finally {
-            // Always remove from active updates set when done (success or error)
-            activeUpdatesRef.current.delete(uniqueIdentifier);
-            // Clear the tick running flag
-            isWorkerTickRunningRef.current = false;
+        // Always remove from active updates set when done (success or error)
+        activeUpdatesRef.current.delete(uniqueIdentifier);
+        // Release data point lock
+        activeDataPointLocksRef.current.delete(uniqueIdentifier);
+        // Clear the tick running flag
+        isWorkerTickRunningRef.current = false;
         }
 
-        // Advance to next metric in current group
+                // Advance to next metric in current group
         const nextMetricIndex = (metricIndex + 1) % currentGroupData.length;
-        metricUpdateIndexRef.current = nextMetricIndex;
+        currentMetricIndexRef.current = nextMetricIndex;
 
         // If we've completed all metrics in current group, move to next group
         if (nextMetricIndex === 0) {
+            const currentGroupIndex = availableChartGroups.indexOf(currentGroup);
             const nextGroupIndex = (currentGroupIndex + 1) % availableChartGroups.length;
-            chartGroupIndexRef.current = nextGroupIndex;
+            currentChartGroupRef.current = availableChartGroups[nextGroupIndex];
+            currentMetricIndexRef.current = 0;
 
-            // If we've completed all groups, increment loop count
-            if (nextGroupIndex === 0) {
-                const nextLoopCount = (chartGroupLoopCountRef.current + 1) % 2;
-                chartGroupLoopCountRef.current = nextLoopCount;
-
-                if (nextLoopCount === 0) {
-                    console.log('[Prod Worker] Completed 2 loops through all chart groups, starting over...');
-                }
+            // Check if we've completed a full loop
+            if (nextGroupIndex === 0 && currentGroupIndex === availableChartGroups.length - 1) {
+                loopIterationRef.current += 1;
+                console.log(`[Prod Worker] Completed full loop #${loopIterationRef.current} through all chart groups`);
             }
         }
     }, [dataPoints]);
@@ -660,18 +767,25 @@ export const useDashboardData = () => {
 
             console.log(`[Force Execute] Executing ${i + 1}/${targetDataPoints.length}: ${uniqueIdentifier}`);
 
-            // Check if this query is currently being processed
-            if (activeUpdatesRef.current.has(uniqueIdentifier)) {
+            // Check if this query is currently being processed (use correct ref for consistency)
+            if (activeDataPointLocksRef.current.has(uniqueIdentifier)) {
                 console.log(`[Force Execute] Skipping ${uniqueIdentifier} - already in progress`);
                 continue;
             }
 
             try {
                 // Mark as active for consistency with main worker
-                activeUpdatesRef.current.add(uniqueIdentifier);
+                activeDataPointLocksRef.current.add(uniqueIdentifier);
 
+                // Use deterministic base date for force execute as well
+                const forceExecutionBaseDate = new Date();
+                forceExecutionBaseDate.setSeconds(0, 0);
+                const deterministicSql = dataPoint.productionSqlExpression.replace(
+                    /GETDATE\(\)/g,
+                    `'${formatDateYYYYMMDDLocal(forceExecutionBaseDate)}'`
+                );
                 const { value, error } = await mcpService.fetchMetricData(
-                    dataPoint.productionSqlExpression,
+                    deterministicSql,
                     dataPoint.serverName
                 );
 
@@ -722,8 +836,8 @@ export const useDashboardData = () => {
                 console.error(`[Force Execute] Exception for ${uniqueIdentifier}:`, err);
                 errorCount++;
             } finally {
-                // Clean up active updates tracking
-                activeUpdatesRef.current.delete(uniqueIdentifier);
+                // Clean up active updates tracking - use correct ref for consistency
+                activeDataPointLocksRef.current.delete(uniqueIdentifier);
             }
         }
 
@@ -742,9 +856,11 @@ export const useDashboardData = () => {
     // Function to reset worker indices for debugging/testing
     const resetWorkerIndices = useCallback(() => {
         console.log('[useDashboardData] 🔄 Resetting worker indices for sequential testing');
-        metricUpdateIndexRef.current = 0;
-        chartGroupIndexRef.current = 0;
-        chartGroupLoopCountRef.current = 0;
+        currentMetricIndexRef.current = 0;
+        currentChartGroupRef.current = null;
+        chartGroupCountersRef.current = {};
+        completedGroupsRef.current = new Set();
+        loopIterationRef.current = 0;
         activeUpdatesRef.current.clear();
         isWorkerTickRunningRef.current = false;
         failedQueriesRef.current = {};
@@ -881,10 +997,10 @@ export const useDashboardData = () => {
             // List of dashboard data files to reload
             const dataFiles = [
                 'hooks/dashboard-data/key-metrics.json',
-                'hooks/dashboard-data/ar-aging.json', 
+                'hooks/dashboard-data/ar-aging.json',
                 'hooks/dashboard-data/daily-orders.json',
                 'hooks/dashboard-data/web-orders.json',
-                'hooks/dashboard-data/inventory.json',
+                'hooks/dashboard-data/service.json',
                 'hooks/dashboard-data/site-distribution.json',
                 'hooks/dashboard-data/customer-metrics.json',
                 'hooks/dashboard-data/accounts.json',

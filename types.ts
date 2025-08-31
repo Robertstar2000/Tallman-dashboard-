@@ -3,6 +3,7 @@ export enum ChartGroup {
     ACCOUNTS = "Accounts",
     CUSTOMER_METRICS = "Customer Metrics",
     INVENTORY = "Inventory",
+    SERVICE = "Service",
     POR_OVERVIEW = "POR Overview",
     DAILY_ORDERS = "Daily Orders",
     AR_AGING = "AR Aging",

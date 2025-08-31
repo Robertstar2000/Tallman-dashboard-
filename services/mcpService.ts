@@ -77,8 +77,13 @@ export const fetchMetricData = async (
     try {
         let serverUrl: string;
 
-        // Determine server URL
-        if (serverName === ServerName.P21) {
+        // Determine server URL with safety override:
+        // If SQL clearly references P21 tables but serverName says POR, route to P21.
+        const looksLikeP21 = /\b(oe_hdr|invoice_hdr|invoice_line|po_hdr|po_line|inv_loc|customer|balances|chart_of_accts)\b/i.test(sql);
+        if (serverName === ServerName.P21 || looksLikeP21) {
+            if (serverName !== ServerName.P21 && looksLikeP21) {
+                console.warn(`[MCP Service] Overriding server from ${serverName} to P21 based on detected P21 tables in SQL.`);
+            }
             serverUrl = MCP_P21_URL;
         } else if (serverName === ServerName.POR) {
             serverUrl = MCP_POR_URL;
@@ -98,37 +103,78 @@ export const fetchMetricData = async (
         const actualResult = result;
 
         if (actualResult && actualResult.success && actualResult.data && actualResult.data.length > 0) {
-            // Get the first row and first column value (for single metric queries)
+            // Get the first row from query result
             const firstRow = actualResult.data[0];
-            let value = 0;
 
             console.log(`[MCP Service] First row from ${serverName}:`, firstRow);
 
-            // Extract value from the first property of the row object
-            const firstKey = Object.keys(firstRow)[0];
-            if (firstKey) {
-                const rawValue = firstRow[firstKey];
-                console.log(`[MCP Service] Raw value from ${serverName} (${firstKey}):`, rawValue, typeof rawValue);
-
-                // Handle different value types properly
-                if (rawValue === null || rawValue === undefined) {
-                    value = 0;
-                } else if (typeof rawValue === 'number') {
-                    value = rawValue;
-                } else if (typeof rawValue === 'string') {
-                    // Try to parse string as number
-                    const parsed = parseFloat(rawValue);
-                    value = isNaN(parsed) ? 0 : parsed;
-                } else {
-                    // Convert other types to number if possible
-                    const parsed = parseFloat(String(rawValue));
-                    value = isNaN(parsed) ? 0 : parsed;
+            // Robust numeric extraction:
+            // - Prefer actual numeric columns over string parsing
+            // - Prefer well-known aliases (result, count, total, value, amount, NewRentalCount_*, RentalSales_*, ar_ending_balance)
+            // - As a last resort, parse numeric-looking strings (strip commas/currency), allowing 0 and large numbers
+            const parseToNumber = (input: any): number | null => {
+                if (input === null || input === undefined) return null;
+                if (typeof input === 'number') {
+                    return Number.isFinite(input) ? input : null;
                 }
+                if (typeof input === 'string') {
+                    const s = input.trim();
+                    if (!s) return null;
+                    // Remove common formatting: commas, currency symbols, percent signs, spaces
+                    const cleaned = s.replace(/[$€£,%\s]/g, '').replace(/,/g, '');
+                    // Allow minus sign and decimals
+                    const num = Number(cleaned);
+                    if (Number.isFinite(num)) return num;
+                    return null;
+                }
+                return null;
+            };
 
-                console.log(`[MCP Service] Final parsed value from ${serverName}:`, value);
+            const keys = Object.keys(firstRow);
+            // Sort keys to prefer known aliases first
+            const preferRegex = /(result|count|total|sum|value|amount|newrentalcount|rentalsales|ar_ending_balance)/i;
+            const sortedKeys = [...keys].sort((a, b) => {
+                const aPref = preferRegex.test(a) ? 0 : 1;
+                const bPref = preferRegex.test(b) ? 0 : 1;
+                if (aPref !== bPref) return aPref - bPref;
+                return 0;
+            });
+
+            let extractedValue: number | null = null;
+            let chosenKey: string | null = null;
+
+            // 1) Try direct numeric columns (preferred)
+            for (const key of sortedKeys) {
+                const raw = firstRow[key];
+                if (typeof raw === 'number' && Number.isFinite(raw)) {
+                    extractedValue = raw;
+                    chosenKey = key;
+                    break;
+                }
             }
 
-            return { value };
+            // 2) Fallback: try parsing strings numerically (including "0")
+            if (extractedValue === null) {
+                for (const key of sortedKeys) {
+                    const raw = firstRow[key];
+                    const parsed = parseToNumber(raw);
+                    if (parsed !== null) {
+                        extractedValue = parsed;
+                        chosenKey = key;
+                        break;
+                    }
+                }
+            }
+
+            if (extractedValue === null) {
+                console.warn(`[MCP Service] No numeric value could be extracted from row:`, firstRow);
+                extractedValue = 0;
+            } else {
+                console.log(`[MCP Service] Extracted value ${extractedValue} from column "${chosenKey}"`);
+            }
+
+            console.log(`[MCP Service] Final extracted value from ${serverName}: ${extractedValue}`);
+            return { value: extractedValue };
         } else {
             const errorMsg = actualResult?.error || result?.error || 'No data returned';
             console.error(`[MCP Service] Error from ${serverName}:`, errorMsg);
@@ -152,8 +198,12 @@ export const fetchAggregatedData = async (
     try {
         let serverUrl: string;
 
-        // Determine server URL
-        if (serverName === ServerName.P21) {
+        // Determine server URL with safety override for P21-looking SQL
+        const looksLikeP21 = /\b(oe_hdr|invoice_hdr|invoice_line|po_hdr|po_line|inv_loc|customer|balances|chart_of_accts)\b/i.test(sql);
+        if (serverName === ServerName.P21 || looksLikeP21) {
+            if (serverName !== ServerName.P21 && looksLikeP21) {
+                console.warn(`[MCP Service] Overriding server from ${serverName} to P21 for aggregated query due to detected P21 tables.`);
+            }
             serverUrl = MCP_P21_URL;
         } else if (serverName === ServerName.POR) {
             serverUrl = MCP_POR_URL;
@@ -179,48 +229,57 @@ export const fetchAggregatedData = async (
                 console.log(`[MCP Service] Processing row:`, row);
 
                 try {
-                    // Try to extract location and value from row
+                    // Determine location and value using robust selection rules
                     const keys = Object.keys(row);
-                    let location = '';
-                    let value = 0;
 
-                    // Assume first column is location and second is value (like 'total_orders')
-                    if (keys.length >= 2) {
-                        location = row[keys[0]] || '';
-                        const rawValue = row[keys[1]];
-
-                        // Handle different value types properly
-                        if (rawValue === null || rawValue === undefined) {
-                            value = 0;
-                        } else if (typeof rawValue === 'number') {
-                            value = rawValue;
-                        } else if (typeof rawValue === 'string') {
-                            const parsed = parseFloat(rawValue);
-                            value = isNaN(parsed) ? 0 : parsed;
-                        } else {
-                            const parsed = parseFloat(String(rawValue));
-                            value = isNaN(parsed) ? 0 : parsed;
+                    const parseToNumberAgg = (input: any): number | null => {
+                        if (input === null || input === undefined) return null;
+                        if (typeof input === 'number') {
+                            return Number.isFinite(input) ? input : null;
                         }
-
-                        results.push({ location: String(location), value });
-                        console.log(`[MCP Service] Extracted location: "${location}", value: ${value}`);
-                    } else {
-                        // Fallback: use first column as value if no second column
-                        const rawValue = row[keys[0]];
-                        let value = 0;
-                        if (rawValue === null || rawValue === undefined) {
-                            value = 0;
-                        } else if (typeof rawValue === 'number') {
-                            value = rawValue;
-                        } else if (typeof rawValue === 'string') {
-                            const parsed = parseFloat(rawValue);
-                            value = isNaN(parsed) ? 0 : parsed;
-                        } else {
-                            const parsed = parseFloat(String(rawValue));
-                            value = isNaN(parsed) ? 0 : parsed;
+                        if (typeof input === 'string') {
+                            const s = input.trim();
+                            if (!s) return null;
+                            const cleaned = s.replace(/[$€£,%\s]/g, '').replace(/,/g, '');
+                            const num = Number(cleaned);
+                            if (Number.isFinite(num)) return num;
+                            return null;
                         }
-                        results.push({ location: String(keys[0] || 'unknown'), value });
+                        return null;
+                    };
+
+                    // Choose location: prefer keys named 'location', 'site', 'city', 'name', 'branch', 'warehouse'
+                    const locationPrefer = /(location|site|city|name|branch|warehouse)/i;
+                    let locationKey = keys.find(k => locationPrefer.test(k)) || '';
+                    if (!locationKey) {
+                        // fallback to first string-like column
+                        locationKey = keys.find(k => typeof row[k] === 'string') || keys[0] || 'unknown';
                     }
+                    const location = String(row[locationKey] ?? 'unknown');
+
+                    // Choose value: prefer numeric columns, or aliases like result/count/total/value/amount
+                    const preferRegexVal = /(result|count|total|sum|value|amount|newrentalcount|rentalsales|ar_ending_balance)/i;
+                    const sortedKeysVal = [...keys].sort((a, b) => {
+                        const aPref = (typeof row[a] === 'number' || preferRegexVal.test(a)) ? 0 : 1;
+                        const bPref = (typeof row[b] === 'number' || preferRegexVal.test(b)) ? 0 : 1;
+                        if (aPref !== bPref) return aPref - bPref;
+                        return 0;
+                    });
+
+                    let value: number | null = null;
+                    for (const k of sortedKeysVal) {
+                        // Skip the chosen location column
+                        if (k === locationKey) continue;
+                        const parsed = parseToNumberAgg(row[k]);
+                        if (parsed !== null) {
+                            value = parsed;
+                            break;
+                        }
+                    }
+                    if (value === null) value = 0;
+
+                    results.push({ location, value });
+                    console.log(`[MCP Service] Extracted location: "${location}", parsed value: ${value}`);
                 } catch (rowError) {
                     console.error(`[MCP Service] Error processing row:`, row, rowError);
                     results.push({ location: 'error', value: 0, error: 'Row processing error' });
