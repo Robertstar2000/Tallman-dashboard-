@@ -308,7 +308,8 @@ export const useDashboardData = () => {
             'Customer Metrics',
             'Accounts',
             'Historical Data',
-            'POR Overview'
+            'POR Overview',
+            'Service'
         ];
 
         // Group data points by chart group and sort within each group by ID

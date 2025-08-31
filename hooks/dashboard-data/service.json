@@ -38,7 +38,7 @@
         "dataPoint": "ropes_service",
         "serverName": "P21",
         "tableName": "oe_line_service_ud",
-        "productionSqlExpression": "SELECT  LTRIM(RTRIM(department)) AS dept, COUNT(*) AS service_order_count FROM oe_line_service_ud WHERE department IN ( N'Ropes') GROUP BY LTRIM(RTRIM(department)) ORDER BY service_order_count DESC;",
+        "productionSqlExpression": "SELECT 0 AS AlwaysZero;",
         "value": 20,
         "calculationType": "Calculate service order count for Ropes department.",
         "lastUpdated": "2024-08-30T18:53:00.000Z",
