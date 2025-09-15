@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node startup.js",
-    "dev": "npm run build && node startup.js",
+    "dev": "node startup.js",
+    "dev:build": "npm run build && node startup.js",
     "build": "vite build",
     "preview": "vite preview"
   },

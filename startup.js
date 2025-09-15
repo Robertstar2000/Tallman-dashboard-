@@ -41,83 +41,78 @@ function spawnProcess(command, args, options = {}) {
         stdio: ['pipe', 'pipe', 'pipe'],
         ...options
     });
-    
-    child.stdout.on('data', (data) => {
-        console.log(`[${options.name || 'Process'}] ${data.toString().trim()}`);
-    });
-    
-    child.stderr.on('data', (data) => {
-        console.error(`[${options.name || 'Process'}] ${data.toString().trim()}`);
-    });
-    
-    child.on('close', (code) => {
-        console.log(`[${options.name || 'Process'}] Process exited with code ${code}`);
-    });
-    
-    child.on('error', (error) => {
-        console.error(`[${options.name || 'Process'}] Error: ${error.message}`);
-    });
-    
+
+    // Check if child process is valid before attaching event handlers
+    if (child) {
+        child.stdout && child.stdout.on('data', (data) => {
+            console.log(`[${options.name || 'Process'}] ${data.toString().trim()}`);
+        });
+
+        child.stderr && child.stderr.on('data', (data) => {
+            console.error(`[${options.name || 'Process'}] ${data.toString().trim()}`);
+        });
+
+        child.on('close', (code) => {
+            console.log(`[${options.name || 'Process'}] Process exited with code ${code}`);
+        });
+
+        child.on('error', (error) => {
+            console.error(`[${options.name || 'Process'}] Error: ${error.message}`);
+        });
+    } else {
+        console.error(`[${options.name || 'Process'}] Failed to spawn process`);
+    }
+
     return child;
 }
 
-// Start servers with port checking
+// Start servers with the new bridge architecture
 async function startServers() {
     try {
         // Find available ports
-        const p21Port = await findAvailablePort(8001);
-        const porPort = await findAvailablePort(8002);
         const vitePort = await findAvailablePort(8080);
 
-        // Start P21 MCP Server
-        console.log(`📊 Starting P21 HTTP MCP Server on port ${p21Port}...`);
-        const p21Server = spawnProcess('python', [path.join('mcp-servers', 'p21_http_server.py')], {
-            name: 'P21-MCP',
-            cwd: process.cwd(),
-            env: { ...process.env, PORT: p21Port.toString() }
+        // Start P21 Bridge Server (includes Python MCP server inside it)
+        console.log(`🌉 Starting P21 Bridge Service...`);
+        const p21Bridge = spawnProcess('node', ['start-p21-bridge.js'], {
+            name: 'P21-BRIDGE',
+            cwd: process.cwd()
         });
 
-        // Start POR MCP Server
-        console.log(`🗃️ Starting POR HTTP MCP Server on port ${porPort}...`);
-        const porServer = spawnProcess('python', [path.join('mcp-servers', 'por_http_server.py')], {
-            name: 'POR-MCP',
-            cwd: process.cwd(),
-            env: { ...process.env, PORT: porPort.toString() }
-        });
-
-        // Wait a bit for MCP servers to start, then start Vite
+        // Wait for bridge to start up, then start Vite
         setTimeout(() => {
             console.log(`🌐 Starting Vite development server on port ${vitePort}...`);
-            const viteServer = spawnProcess('cmd', ['/c', 'vite', '--port', vitePort.toString()], {
+            const viteServer = spawnProcess('cmd', ['/c', 'npx vite --port', vitePort.toString()], {
                 name: 'Vite',
                 cwd: process.cwd(),
-                shell: true
+                shell: true,
+                stdio: 'inherit'
             });
 
-            // Update console output with actual ports
+            // Update console output with service information
             console.log('✅ All services starting...');
             console.log(`📱 Dashboard will be available at: http://127.0.0.1:${vitePort}`);
-            console.log(`🔌 P21 MCP Server: http://localhost:${p21Port}`);
-            console.log(`🔌 POR MCP Server: http://localhost:${porPort}`);
-            console.log('\n💡 Press Ctrl+C to stop all services');
-    
+            console.log(`🌉 P21 Bridge Server: http://localhost:8002`);
+            console.log(`🐍 P21 Python Server: http://localhost:8001`);
+            console.log('\n💡 The dashboard is now fully operational with P21 MCP functionality!');
+            console.log('💡 Press Ctrl+C to stop all services');
+
             // Handle graceful shutdown
-            process.on('SIGINT', () => {
+            const cleanup = () => {
                 console.log('\n🛑 Shutting down all servers...');
-                p21Server.kill('SIGTERM');
-                porServer.kill('SIGTERM');
-                viteServer.kill('SIGTERM');
-                setTimeout(() => process.exit(0), 1000);
-            });
-            
-            process.on('SIGTERM', () => {
-                console.log('\n🛑 Shutting down all servers...');
-                p21Server.kill('SIGTERM');
-                porServer.kill('SIGTERM');
-                viteServer.kill('SIGTERM');
-                setTimeout(() => process.exit(0), 1000);
-            });
-        }, 3000);
+                if (p21Bridge && !p21Bridge.killed) {
+                    p21Bridge.kill('SIGTERM');
+                }
+                if (viteServer && !viteServer.killed) {
+                    viteServer.kill('SIGTERM');
+                }
+                setTimeout(() => process.exit(0), 2000);
+            };
+
+            process.on('SIGINT', cleanup);
+            process.on('SIGTERM', cleanup);
+
+        }, 5000); // Give bridge more time to start
 
     } catch (error) {
         console.error('❌ Error starting servers:', error.message);

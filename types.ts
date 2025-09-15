@@ -46,6 +46,9 @@ export interface ConnectionDetails {
     identifier?: string;
     size?: string;
     error?: string;
+    database?: string;
+    debugInfo?: any;
+    errorType?: string;
 }
 
 export type UserRole = 'admin' | 'user';

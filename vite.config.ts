@@ -14,8 +14,21 @@ export default defineConfig(({ mode }) => {
         }
       },
       server: {
-        port: 8080,
-        host: '127.0.0.1'
+        port: 8081,
+        host: '127.0.0.1',
+        // Proxy P21 MCP requests for development
+        proxy: {
+          '/api/p21': {
+            target: 'http://localhost:8002',
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/api\/p21/, '/')
+          },
+          '/api/por': {
+            target: 'http://localhost:8002',
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/api\/por/, '/')
+          }
+        }
       }
     };
 });

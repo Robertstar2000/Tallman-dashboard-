@@ -358,10 +358,17 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                 }));
 
                 console.log(`[ChartCard - Site Distribution] After mapping (${chartData.length} entries):`, chartData);
+                console.log(`[ChartCard - Site Distribution] Raw data details:`, onlineData.map(dp => ({
+                    name: dp.dataPoint,
+                    rawValue: dp.value,
+                    prodValue: dp.prodValue,
+                    variableName: dp.variableName
+                })));
 
-                // Filter out zero values and ensure we have valid data
-                chartData = chartData.filter(entry => entry.value > 0);
-                console.log(`[ChartCard - Site Distribution] After filtering zero values (${chartData.length} entries):`, chartData);
+                // Don't filter zero values - they might be legitimate data (empty sites)
+                // Only filter entries with invalid names
+                chartData = chartData.filter(entry => entry.name && typeof entry.name === 'string');
+                console.log(`[ChartCard - Site Distribution] After filtering invalid entries (${chartData.length} entries):`, chartData);
 
                 if (chartData.length === 0) {
                     console.warn(`[ChartCard - Site Distribution] No valid data after filtering, showing fallback message`);
@@ -389,9 +396,9 @@ const renderChart = (title: ChartGroup, data: DashboardDataPoint[]) => {
                                 outerRadius={80}
                                 paddingAngle={5}
                             >
-                                {chartData.map((entry, index) => (
+                                {chartData.map((entry) => (
                                     <Cell
-                                        key={`cell-${index}`}
+                                        key={`cell-${entry.name}-${entry.value}`}
                                         fill={COLORS[entry.name as keyof typeof COLORS] || '#8884d8'}
                                     />
                                 ))}

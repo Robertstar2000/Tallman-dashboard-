@@ -406,10 +406,10 @@ const Admin: React.FC<AdminProps> = ({
             console.log(`[Admin] "${selectedChartGroup}" selected: showing only ${filtered.length} items from this group, sorted by ID`);
         }
 
-        // Add sequential display ID (1-based numbering) for filtered results
+        // Add unique display ID to prevent React key conflicts
         return filtered.map((point, index) => ({
             ...point,
-            displayId: index + 1 // 1-based sequential numbering for filtered results
+            displayId: `${point.id}-${point.chartGroup}-${index}` // Unique identifier to prevent key conflicts
         }));
     }, [dataPoints, selectedChartGroup]);
 
@@ -660,9 +660,9 @@ const Admin: React.FC<AdminProps> = ({
                         </tr>
                     </thead>
                     <tbody className="bg-primary divide-y divide-secondary">
-                        {filteredAndSortedDataPoints.map((row) => (
+                        {filteredAndSortedDataPoints.map((row, index) => (
                             <TableRow
-                                key={row.id}
+                                key={`${row.id}-${row.chartGroup}-${row.variableName}-${index}`}
                                 row={row}
                                 handleInputChange={handleInputChange}
                                 handleSaveRow={handleSaveRow}

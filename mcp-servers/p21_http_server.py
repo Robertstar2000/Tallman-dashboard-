@@ -1,66 +1,102 @@
 #!/usr/bin/env python3
 """
-P21 HTTP MCP Server
-HTTP wrapper for the P21 MCP server functionality
+P21 HTTP Server
+HTTP server for P21 database operations using DSN: P21live
 """
 
-import asyncio
 import json
 import logging
 import os
 import sys
+import time
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from typing import Any, Dict
 
 import pyodbc
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse
-import threading
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging with safer format to avoid potential Unicode issues
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s:%(name)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger(__name__)
 
 class P21Server:
     """P21 Database operations."""
-    
+
     def __init__(self):
         self.dsn = None
         self.connection_string = None
-        self._connection = None
-        
+        self._connection_pool = []
+        self.max_pool_size = 3
+
     def setup_connection(self):
-        """Setup ODBC connection to P21 database."""
-        self.dsn = os.getenv("P21_DSN", "P21Live")
+        """
+        Setup ODBC connection to P21 database using ONLY DSN and local ODBC.
+        This method exclusively uses the P21_DSN environment variable to connect
+        via the local ODBC driver configuration.
+        """
+        self.dsn = os.getenv("P21_DSN", "P21live").strip()
         
+        # SECURITY: Only use DSN-based connections, no direct server connections
+        if not self.dsn:
+            raise ValueError("P21_DSN environment variable is required - only DSN connections are supported")
+
         try:
-            if self.dsn:
-                self.connection_string = f"DSN={self.dsn};"
-                logger.info(f"Using DSN connection: {self.dsn}")
-                # Test connection
-                self._connection = pyodbc.connect(self.connection_string)
-                logger.info("Successfully connected to P21 database")
-            else:
-                raise ValueError("P21_DSN is required for ODBC connection to P21")
+            # Use ONLY DSN connection - no server/username/password combinations allowed
+            self.connection_string = f"DSN={self.dsn};"
+            logger.info(f"Using DSN-only connection: {self.dsn}")
+            logger.info("Connection method: Local ODBC DSN (no direct server connection)")
+            
+            # Test initial connection with retry
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    test_conn = pyodbc.connect(self.connection_string, timeout=10)
+                    logger.info("Successfully connected to P21 database via local ODBC DSN")
+                    test_conn.close()
+                    return
+                except Exception as conn_error:
+                    if attempt < max_retries - 1:
+                        logger.info(f"DSN connection attempt {attempt + 1} failed, retrying...")
+                        time.sleep(1)
+                    else:
+                        raise conn_error
+                        
         except Exception as e:
-            logger.error(f"Failed to connect to database: {e}")
+            logger.error(f"Failed to connect to P21 database via DSN '{self.dsn}' after {max_retries} attempts: {e}")
+            logger.error("Ensure the DSN is properly configured in local ODBC settings")
             raise
-    
+
     def get_connection(self):
-        """Get database connection, creating new one if needed."""
+        """Get database connection - simplified version without pooling."""
         try:
-            if self._connection is None:
-                self._connection = pyodbc.connect(self.connection_string)
-            else:
-                # Test connection
-                cursor = self._connection.cursor()
-                cursor.execute("SELECT 1")
-                cursor.fetchone()
-                cursor.close()
-            return self._connection
-        except Exception:
-            # Reconnect if connection is stale
-            self._connection = pyodbc.connect(self.connection_string)
-            return self._connection
+            logger.info("Creating new database connection...")
+            
+            # Create fresh connection each time to avoid pooling issues
+            if not self.connection_string:
+                self.setup_connection()
+                if not self.connection_string:
+                    raise Exception("Unable to setup P21 database connection")
+
+            logger.info(f"Connecting with: {self.connection_string}")
+            conn = pyodbc.connect(self.connection_string, timeout=5)
+            logger.info("Database connection established successfully")
+            
+            return conn
+
+        except Exception as e:
+            logger.error(f"Failed to get database connection: {e}")
+            raise
+
+    def close_connection(self, conn):
+        """Return connection to pool or close it."""
+        if len(self._connection_pool) < self.max_pool_size:
+            self._connection_pool.append(conn)
+        else:
+            conn.close()
     
     def read_table_column(self, table_name: str, column_name: str, 
                          where_clause: str = None, limit: int = 100) -> Dict[str, Any]:
@@ -187,9 +223,9 @@ class P21Server:
 
     def execute_sql(self, sql_query: str, limit: int = 1000) -> Dict[str, Any]:
         """Execute arbitrary SQL query."""
+        start_time = time.time()
         try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
+            logger.info(f"Starting SQL execution: {sql_query}")
             
             # Add basic security check for dangerous operations
             sql_upper = sql_query.upper().strip()
@@ -220,8 +256,14 @@ class P21Server:
                     "query": sql_query
                 }
             
+            logger.info(f"Getting database connection...")
+            conn = self.get_connection()
+            logger.info(f"Got connection, creating cursor...")
+            cursor = conn.cursor()
+            
             logger.info(f"Executing SQL query: {sql_query}")
             cursor.execute(sql_query)
+            logger.info(f"Query executed, fetching results...")
             
             # Get column names
             columns = [column[0] for column in cursor.description] if cursor.description else []
@@ -231,6 +273,8 @@ class P21Server:
                 rows = cursor.fetchmany(limit)
             else:
                 rows = cursor.fetchall()
+            
+            logger.info(f"Fetched {len(rows)} rows, processing data...")
             
             # Convert rows to list of dictionaries
             data = []
@@ -250,6 +294,8 @@ class P21Server:
                 data.append(row_dict)
             
             cursor.close()
+            elapsed = time.time() - start_time
+            logger.info(f"SQL execution completed in {elapsed:.2f} seconds")
             
             return {
                 "success": True,
@@ -257,15 +303,18 @@ class P21Server:
                 "columns": columns,
                 "data": data,
                 "query": sql_query,
-                "limited": limit is not None and len(rows) == limit
+                "limited": limit is not None and len(rows) == limit,
+                "execution_time": elapsed
             }
             
         except Exception as e:
-            logger.error(f"Error executing SQL query: {e}")
+            elapsed = time.time() - start_time
+            logger.error(f"Error executing SQL query after {elapsed:.2f}s: {e}")
             return {
                 "success": False,
                 "error": str(e),
-                "query": sql_query
+                "query": sql_query,
+                "execution_time": elapsed
             }
 
 # Global server instance
@@ -273,14 +322,17 @@ p21_server = P21Server()
 
 class RequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
+        logger.info(f"Received POST request to {self.path}")
         if self.path == '/call_tool':
             try:
+                logger.info("Processing /call_tool request")
                 content_length = int(self.headers['Content-Length'])
                 post_data = self.rfile.read(content_length)
                 request_data = json.loads(post_data.decode('utf-8'))
                 
                 tool_name = request_data.get('name')
                 arguments = request_data.get('arguments', {})
+                logger.info(f"Tool: {tool_name}, Args: {arguments}")
                 
                 if tool_name == 'read_table_column':
                     result = p21_server.read_table_column(
@@ -294,6 +346,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                         table_pattern=arguments.get('table_pattern')
                     )
                 elif tool_name == 'execute_sql':
+                    logger.info("Executing SQL tool")
                     result = p21_server.execute_sql(
                         sql_query=arguments.get('sql_query'),
                         limit=arguments.get('limit', 1000)
@@ -304,15 +357,18 @@ class RequestHandler(BaseHTTPRequestHandler):
                         "error": f"Unknown tool: {tool_name}"
                     }
                 
+                logger.info(f"Tool execution completed, sending response")
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')
-                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', '*')
+                self.send_header('Access-Control-Max-Age', '86400')
                 self.end_headers()
                 
                 response = json.dumps(result, indent=2).encode('utf-8')
                 self.wfile.write(response)
+                logger.info("Response sent successfully")
                 
             except Exception as e:
                 logger.error(f"Error handling request: {e}")
@@ -322,15 +378,41 @@ class RequestHandler(BaseHTTPRequestHandler):
                 error_response = json.dumps({"success": False, "error": str(e)}).encode('utf-8')
                 self.wfile.write(error_response)
         else:
+            logger.info(f"Unknown path: {self.path}")
             self.send_response(404)
             self.end_headers()
     
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', '*')
+        self.send_header('Access-Control-Max-Age', '86400')
         self.end_headers()
+
+    def do_GET(self):
+        logger.info(f"Received GET request to {self.path}")
+        if self.path.startswith('/?'):
+            # Health check or simple query
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', '*')
+            self.end_headers()
+
+            health_response = json.dumps({
+                "status": "healthy",
+                "server": "P21 HTTP MCP Server",
+                "endpoints": ["/call_tool"],
+                "methods": ["POST", "OPTIONS"],
+                "timestamp": "2025-01-01T00:00:00Z"
+            }).encode('utf-8')
+            self.wfile.write(health_response)
+        else:
+            self.send_response(404)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
     
     def log_message(self, format, *args):
         # Suppress default HTTP server logging
@@ -338,17 +420,29 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 def main():
     # Set environment variable for this process
-    os.environ['P21_DSN'] = 'P21Live'
+    os.environ['P21_DSN'] = 'P21live'
     
     try:
         # Setup P21 connection
         p21_server.setup_connection()
         
-        # Start HTTP server
-        server_address = ('localhost', 8001)
-        httpd = HTTPServer(server_address, RequestHandler)
-        logger.info(f"P21 HTTP MCP Server running on http://localhost:8001")
-        httpd.serve_forever()
+        # Try different ports if 8001 is busy
+        port = 8001
+        for attempt in range(10):
+            try:
+                server_address = ('localhost', port)
+                httpd = HTTPServer(server_address, RequestHandler)
+                logger.info(f"P21 HTTP MCP Server running on http://localhost:{port}")
+                httpd.serve_forever()
+                break
+            except OSError as e:
+                if e.errno == 10048:  # Address already in use
+                    logger.info(f"Port {port} is in use, trying {port + 1}")
+                    port += 1
+                else:
+                    raise
+        else:
+            raise Exception("Could not find available port")
         
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
@@ -357,4 +451,10 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
+    print("=" * 80)
+    print("P21 HTTP MCP Server Starting...")
+    print("DSN: P21live")
+    print("Port: 8001")
+    print("Read timeout: 60 seconds")
+    print("=" * 80)
     main()

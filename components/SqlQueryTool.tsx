@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { generateSqlResponse } from '../services/geminiService';
+
 import * as mcpService from '../services/mcpService';
 import { useGlobal } from './contexts/GlobalContext';
 import { DashboardDataPoint, ServerName, ChartGroup } from '../types';
@@ -54,10 +54,10 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
             filtered.sort((a, b) => a.variableName.localeCompare(b.variableName));
         }
         
-        // Add display ID (sequential numbering starting from 1)
+        // Add unique display ID to prevent React key conflicts
         return filtered.map((point, index) => ({
             ...point,
-            displayId: index + 1
+            displayId: `${point.id}-${point.chartGroup}-${index}` // Unique identifier to prevent key conflicts
         }));
     }, [dataPoints, localChartGroupFilter]);
 
@@ -68,22 +68,23 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
     }, []);
 
     const handleLoadQuery = () => {
-        const displayId = parseInt(metricId, 10);
-        if (isNaN(displayId)) {
-            setError("Please enter a valid numeric ID.");
+        if (!metricId) {
+            setError("Please enter a metric ID.");
             return;
         }
         setError(null);
-        
-        // Find the data point by display ID (1-based index)
-        const dataPointWithDisplayId = filteredAndSortedDataPoints.find(dp => dp.displayId === displayId);
+
+        // Find the data point by display ID or ID
+        const dataPointWithDisplayId = filteredAndSortedDataPoints.find(dp =>
+            dp.displayId === metricId || dp.id.toString() === metricId
+        );
         if (dataPointWithDisplayId) {
             setQuery(dataPointWithDisplayId.productionSqlExpression);
             setServer(dataPointWithDisplayId.serverName);
             setLoadedMetricId(dataPointWithDisplayId.id); // Store the actual database ID
-            setFeedbackMessage(`Loaded SQL and server (${dataPointWithDisplayId.serverName}) for display ID: ${displayId} (${dataPointWithDisplayId.variableName})`);
+            setFeedbackMessage(`Loaded SQL and server (${dataPointWithDisplayId.serverName}) for ID: ${metricId} (${dataPointWithDisplayId.variableName})`);
         } else {
-            setError(`Metric with display ID ${displayId} not found in current filter view.`);
+            setError(`Metric with ID ${metricId} not found in current filter view.`);
             setLoadedMetricId(null);
         }
     };
@@ -125,7 +126,7 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
         try {
             const response = mode === 'production'
                 ? await mcpService.executeQuery(query, server)
-                : await generateSqlResponse(query, dataPoints, server);
+                : { error: 'Demo mode: Direct queries not available. Only production mode supports SQL execution.' };
             
             if (response.error) {
                 setError(response.error);
@@ -178,18 +179,16 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
 
             <div className="mb-4 p-4 bg-secondary rounded-lg">
                 <label htmlFor="metric-id" className="block text-sm font-medium text-text-secondary mb-2">
-                    Load SQL by Display ID
+                    Load SQL by ID
                 </label>
                 <div className="flex items-center space-x-2">
                     <input
-                        type="number"
+                        type="text"
                         id="metric-id"
                         value={metricId}
                         onChange={(e) => setMetricId(e.target.value)}
-                        className="w-32 bg-primary p-2 rounded border border-transparent focus:border-accent focus:ring-0 text-sm"
-                        placeholder="Enter ID..."
-                        min="1"
-                        max={filteredAndSortedDataPoints.length}
+                        className="w-48 bg-primary p-2 rounded border border-transparent focus:border-accent focus:ring-0 text-sm"
+                        placeholder="Enter metric ID or display ID..."
                     />
                     <button
                         onClick={handleLoadQuery}
@@ -198,6 +197,9 @@ const SqlQueryTool: React.FC<SqlQueryToolProps> = ({ dataPoints, updateDataPoint
                         Load
                     </button>
                 </div>
+                <p className="text-xs text-text-secondary mt-1">
+                    Enter a metric ID (number) or display ID format like "{filteredAndSortedDataPoints[0]?.displayId || 'example-display-id'}"
+                </p>
             </div>
 
             <form onSubmit={handleSubmit}>
